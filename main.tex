@@ -28,7 +28,7 @@
 \usepackage{placeins}
 \usepackage{etoolbox}
 
-
+% TICKS hack
 \makeatletter \global\let\tikz@ensure@dollar@catcode=\relax \makeatother
 
 \AtBeginEnvironment{tabular}{\scriptsize}
@@ -501,7 +501,7 @@ because I/O flows of every I/O path towards a target OST are
 evenly distributed for a striping access pattern against OSTs.
 
 Figure~\ref{fig:IO_THROT} depicts an overview of I/O throttling
-acheme done by 192 aggregators towards 12 OSTs.
+scheme done by 192 aggregators towards 12 OSTs.
 %
 \begin{figure}[htb]
 \centering

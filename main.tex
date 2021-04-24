@@ -114,11 +114,11 @@ analyzing I/O activities on target parallel file systems and data transfers thro
 With an increase in the number of compute nodes and target I/O nodes,
 it is quite difficult to tune an implementation only through such benchmark runs.
 
-A profiling tool named Tofu PA~\cite{profiler:fujitsu-tech-si} is provided on the K computer,
-which acquired statistical information called Tofu PA information regarding communication
+A profiling tool named Tofu~PA~\cite{profiler:fujitsu-tech-si} is provided on the K computer,
+which acquired statistical information called Tofu~PA information regarding communication
 in the Tofu interconnects~\cite{tofu:micro2012} on used compute nodes, with the purpose
 to tune communications among compute nodes.
-However, there were no tools to get the Tofu PA information of Tofu interconnects
+However, there were no tools to get the Tofu~PA information of Tofu interconnects
 among I/O nodes and I/O activities of its parallel file systems.
 A well-balanced I/O workload among compute nodes, I/O nodes, and parallel file systems
 is required to optimize I/O operations. Without knowing the status of I/O nodes
@@ -284,7 +284,7 @@ It is noted that an I/O path from each compute node is automatically routed to
 an I/O node (either of BIO, GIO, and LIO) on the same Z-link,
 then routed to a target OSS running on an LIO.
 
-Performance profiling tools including Tofu PA addressed to tune performance of compute nodes
+Performance profiling tools including Tofu~PA addressed to tune performance of compute nodes
 and communications among compute nodes.
 It is noted that the similar tools are available at Fugaku
 as remarked in FAQ of \cite{fugaku_info:web}.
@@ -292,7 +292,7 @@ The tools have succeeded to leverage computing potential of the K computer,
 especially in tuning applications utilizing a large number of compute nodes.
 The only way to tune I/O operations is benchmark evaluations
 because there was not any I/O profiling tool for users to profile activities
-of I/O nodes and parallel file systems including the Tofu PA information among I/O nodes.
+of I/O nodes and parallel file systems including the Tofu~PA information among I/O nodes.
 Therefore, it was quite difficult to tune I/O operations using only the existing profiling tools.
 
 \subsection{Log collection for monitoring the LFS}
@@ -339,7 +339,7 @@ a huge size of recorded information on the log-collection server
 from other high-priority components of the K computer for a long time.
 
 The {\tt Tofu stats} consist of the following packet processing metrics of the 10 links,
-which are obtained from a TNR of each I/O node through the Tofu PA information
+which are obtained from a TNR of each I/O node through the Tofu~PA information
 in each 10 minutes interval:
 %
 \begin{itemize}

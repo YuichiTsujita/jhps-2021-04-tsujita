@@ -436,19 +436,24 @@ and associated heat-map image data are stored in the PNG format.
 
 MPI-IO is an I/O interface including parallel I/O in the MPI standard~\cite{mpi-forum:web}.
 An MPI library for the K computer supports MPI-IO functions for the FEFS
-using ROMIO~\cite{thakur:romio}.
+using MPI-IO implementation named ROMIO~\cite{thakur:romio}.
+Two-phase I/O optimization in ROMIO
+improves collective MPI-IO performance in accessing
+non-contiguous data layouts in each process by rearrangement
+to form large data access space as much as possible in each process
+performing I/O (aggregator).
 Although two-phase I/O optimization of ROMIO improves collective MPI-IO performance,
 the implementation on the K computer uses an old implementation of ROMIO
 which is not optimized for Lustre.
 Therefore, the original MPI-IO implementation is not suitable
 for the FEFS to achieve high I/O performance.
 
-The cyrrent ROMIO with the improved two-phase I/O for Lustre~\cite{lustre-adio:whpaper-2008}
+The current ROMIO with the improved two-phase I/O for Lustre~\cite{lustre-adio:whpaper-2008}
 has a potential to improve performance on the FEFS.
 An enhanced implementation named "EARTH on K"
 (hereinafter, EARTH)~\cite{tsujita:WS_EuroMPI2014,tsujita:hpcasia18}
 has been developed for the K computer based on the improved two-phase I/O
-with some performance optimizations for collective MPI-IO at the FEFS.
+with topology-aware performance optimizations for collective MPI-IO at the FEFS.
 
 Its advanced performance optimizations are summarized in the following
 three key optimization parameters described by {\tt agg}, {\tt req}, and {\tt rr}, respectively:
@@ -461,9 +466,18 @@ with a given number of I/O requests per step
 \end{itemize}
 %
 
+ROMIO deploys one aggregator in each compute node, and its layout is dependent on
+MPI rank layout among compute nodes.
+In HPC systems, users have been focusing on MPI rank layout
+for communication performance among compute nodes.
+However, such optimizations are not always suited for aggregator layout
+with respect to interconnects among compute nodes and I/O nodes
+or layout of OSSes/OSTs of a Lustre file system.
+In such layout, contention in data transfer happens
+on network paths among compute nodes and a Lustre file system.
+
 The striping-aware aggregator layout mitigates data transfer congestion
-by suitable layout of processes performing I/O (aggregators)
-in collective MPI-IO operations using ROMIO.
+by suitable aggregator layout.
 Figure~\ref{fig:AGG_STR_AWARE} shows aggregator layouts with and
 without striping awareness in accessing four OSTs by 16 aggregators,
 where numbers in circles represent MPI ranks

@@ -443,16 +443,15 @@ which is not optimized for Lustre.
 Therefore, the original MPI-IO implementation is not suitable
 for the FEFS to achieve high I/O performance.
 
-The recent ROMIO with the improved two-phase I/O for Lustre has a potential
-to improve performance on the FEFS.
+The cyrrent ROMIO with the improved two-phase I/O for Lustre~\cite{lustre-adio:whpaper-2008}
+has a potential to improve performance on the FEFS.
 An enhanced implementation named "EARTH on K"
 (hereinafter, EARTH)~\cite{tsujita:WS_EuroMPI2014,tsujita:hpcasia18}
-has been developed for the K computer by introducing
-the improved two-phase I/O with some performance optimizations
-for collective MPI-IO at the FEFS.
+has been developed for the K computer based on the improved two-phase I/O
+with some performance optimizations for collective MPI-IO at the FEFS.
 
-Its advanced functions are summarized in the following three key optimization parameters
-described by {\tt agg}, {\tt req}, and {\tt rr}, respectively:
+Its advanced performance optimizations are summarized in the following
+three key optimization parameters described by {\tt agg}, {\tt req}, and {\tt rr}, respectively:
 %
 \begin{itemize}
 \item {\tt agg}: Striping-aware aggregator layout
@@ -516,13 +515,14 @@ We may have I/O request contention on OSTs
 if we have I/O requests simultaneously from all aggregators.
 The I/O throttling shown in this figure alleviates I/O request contention
 on OSTs by issuing I/O requests from aggregators in a stepwise manner
-as divided into multiple groups.
-The number of groups can be tuned by the program.
+as divided into multiple groups, by relaying tokens from an aggregator that finishes
+I/O accesses to an aggregator in the next step.
+The number of groups can be tuned at runtime through {\tt MPI\_Info\_set()} or an environment variable.
 Stepwise data aggregation is an optimization associated
 with the I/O throttling, where congestion of data transfer
-among compute nodes can be mitigated.
+among compute nodes can be mitigated by reducing congestion in all-to-alll data transfers.
 
-Figure~\ref{fig:AGG_RR_LAYOUT} illustrates blocked and round-robin
+Figure~\ref{fig:AGG_RR_LAYOUT} illustrates examples of blocked and round-robin
 aggregator layouts, where we have eight aggregators from 16 processes
 deployed among four compute nodes in a blocked layout.
 %
@@ -547,21 +547,23 @@ I/O throttling and step-wise data aggregation in write operations}
 \end{figure}
 %
 Horizontal arrows remarked by "R", "A", and "W" represent
-read, data aggregation, and write phases in collective write
-operations using two-phase I/O, respectively.
+read, data aggregation, and write phases in two-phase I/O of collective write
+operations, respectively.
 I/O throttling scheme exchanges tokens among aggregators.
 If we have a blocked aggregator layout as shown in
 Fig.~\ref{fig:AGG_RR_LAYOUT}\subref{fig:BLK_LAYOUT},
-every four processes in the two compute nodes ("CN \#0" and "CN \#1")
-act as aggregators.
-As a result, we may have contention inside the same compute node.
-It is remarked that such layout leads to high I/O workload
+four processes in the two compute nodes ("CN \#0" and "CN \#1")
+act as aggregators, which are arranged for MPI ranks from 0 to 7.
+As a result, we may have contention inside the same compute node
+to proceed each phase in the two-phase I/O.
+It is also remarked that such layout leads to high I/O workload
 in each node.
 Meanwhile the round-robin aggregator layout in
 Fig.~\ref{fig:AGG_RR_LAYOUT}\subref{fig:RR_LAYOUT}
 can distribute I/O workload evenly
 among compute nodes, and it also prevents aggregators
-from I/O access congestion on the same compute node.
+from I/O access congestion on the same compute node
+by reducing the number of aggregators in the same compute node.
 %% if we have multiple aggregators on a subset of compute nodes.
 
 Although the above enhancements outperformed the original version

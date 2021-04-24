@@ -514,13 +514,15 @@ to the circles are the aggregator layout orders.
 We may have I/O request contention on OSTs
 if we have I/O requests simultaneously from all aggregators.
 The I/O throttling shown in this figure alleviates I/O request contention
-on OSTs by issuing I/O requests from aggregators in a stepwise manner
-as divided into multiple groups, by relaying tokens from an aggregator that finishes
+on OSTs by issuing I/O requests from aggregators in each group in a stepwise manner,
+by relaying tokens from an aggregator that finishes
 I/O accesses to an aggregator in the next step.
-The number of groups can be tuned at runtime through {\tt MPI\_Info\_set()} or an environment variable.
-Stepwise data aggregation is an optimization associated
+The number of groups can be tuned at runtime through {\tt MPI\_Info\_set()}
+or an environment variable.
+Stepwise data aggregation is another optimization associated
 with the I/O throttling, where congestion of data transfer
-among compute nodes can be mitigated by reducing congestion in all-to-alll data transfers.
+among compute nodes can be mitigated by reducing congestion
+on aggregators in data aggregation from all processes.
 
 Figure~\ref{fig:AGG_RR_LAYOUT} illustrates examples of blocked and round-robin
 aggregator layouts, where we have eight aggregators from 16 processes

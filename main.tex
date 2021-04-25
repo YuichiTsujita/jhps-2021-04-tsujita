@@ -596,6 +596,11 @@ in the following section.
 We evaluated the proposed framework at the K computer to compare
 the original MPI-IO implementation and EARTH using IOR~\cite{IOR:web}
 and HPIO~\cite{ching:ipdps06}.
+IOR performs different file creation modes; accessing
+file per rank and shared access to a single file, and we utilize
+the shared access with collective MPI-IO.
+Meanwhile HPIO supports I/O accesses for non-contiguous data layout.
+We utilize collective MPI-IO for the data layout.
 For both benchmark runs, we initiated 12,288 processes on 3,072 compute nodes
 forming a logical 3D layout of $8\times12\times32$ in order to eliminate I/O interference
 from other jobs. According to the 3D layout of assigned compute nodes,
@@ -619,7 +624,7 @@ except that {\tt req=0} denotes deactivation of I/O throttling and stepwise aggr
 
 \subsection{Benchmark configuration}
 
-We evaluated collective MPI-IO in both benchmark runs.
+We evaluated collective MPI-IO in the two benchmark runs, IOR and HPIO.
 In both cases, we enabled two-phase I/O implemented in ROMIO.
 
 \subsubsection{IOR}

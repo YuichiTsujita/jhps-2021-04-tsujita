@@ -143,8 +143,16 @@ Given a unique ID for each job (JOB-ID), the analysis function of the framework
 provides us data such as averaged values of essential I/O activities on used OSSes,
 bandwidth utilization of Tofu interconnects on I/O nodes, and heat-maps about
 I/O performance of used OSTs from the log data with the help of the JOB-DB.
-In this paper, we show how such analyzed data can be used for further performance improvements
-by examining I/O bottlenecks or unbalanced situations in I/O workload among I/O nodes.
+In this paper, we show how such analyzed data can be used for further
+performance improvements by examining I/O bottlenecks or unbalanced situations
+in I/O workload among I/O nodes in our enhancements in collective MPI-IO implementations
+named "EARTH on K"~\cite{tsujita:WS_EuroMPI2014,tsujita:hpcasia18}.
+We have done empirical benchmark evaluations in performance improvements
+for our enhancement work in the K computer.
+Since only the result obtained from the evaluations is I/O performance,
+we had difficulties in tuning the implementation.
+Once we have introduced the framework for the evaluations,
+we have noticed which subsystem is bottleneck during the optimizations.
 
 Compared with our previous paper~\cite{tsujita:hpc_iodc20},
 we have made further analysis by having additional
@@ -162,9 +170,8 @@ A system overview including a file I/O subsystem of the K computer,
 which is an evaluated platform for the proposed framework,
 is explained in Sec.~\ref{sec:K_COMP}.
 In Sec.~\ref{sec:ANAL_SYS}, we present the proposed analysis framework.
-We also explain an enhanced MPI-IO implementation at the K computer
-in Sec.~\ref{sec:EARTH}, where we briefly present its advanced functions
-relative to the original MPI-IO.
+We also explain the "EARTH on K" in Sec.~\ref{sec:EARTH},
+where we briefly present its advanced functions relative to the original MPI-IO.
 In Sec.\ref{sec:EVAL}, we demonstrate experimental evaluations
 for the proposed framework at the K computer, and we discuss the usefulness
 of the proposed framework through examinations about performance improvements
@@ -451,9 +458,15 @@ for the FEFS to achieve high I/O performance.
 The current ROMIO with the improved two-phase I/O for Lustre~\cite{lustre-adio:whpaper-2008}
 has a potential to improve performance on the FEFS.
 An enhanced implementation named "EARTH on K"
-(hereinafter, EARTH)~\cite{tsujita:WS_EuroMPI2014,tsujita:hpcasia18}
-has been developed for the K computer based on the improved two-phase I/O
-with topology-aware performance optimizations for collective MPI-IO at the FEFS.
+(hereinafter, EARTH) has been developed for the K computer
+based on the improved two-phase I/O with topology-aware performance optimizations
+for collective MPI-IO at the FEFS.
+We have already reported performance improvements by using the EARTH
+in some conference papers~\cite{tsujita:WS_EuroMPI2014,tsujita:hpcasia18},
+there is not any evidences what kind of improvements has been achieved
+in underlying interconnects among I/O nodes or OST activities.
+In this context, we have investigated some advanced functions of
+this implementation with the proposed framework.
 
 Its advanced performance optimizations are summarized in the following
 three key optimization parameters described by {\tt agg}, {\tt req}, and {\tt rr}, respectively:
@@ -513,30 +526,60 @@ eliminates data transfer congestion on every I/O path
 because I/O flows of every I/O path towards a target OST are
 evenly distributed for a striping access pattern against OSTs.
 
-Figure~\ref{fig:IO_THROT} depicts an overview of I/O throttling
-scheme done by 192 aggregators towards 12 OSTs.
+Figure~\ref{fig:IO_THROT_DATA_AGG}\ref{fig:IO_THROT} illustrates
+I/O throttling scheme operated by 192 aggregators accessing 12 OSTs,
+where we assume every process acts as an aggregator.
 %
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.42\textwidth]{MPI-IO-throttling.png}
-\caption{I/O request throttling with stepwise data aggregation}
+\begin{minipage}[b]{0.45\textwidth}
+\centering
+\includegraphics[width=0.98\textwidth]{MPI-IO-throttling.png}
+\subcaption{I/O throttling with token relay}
 \label{fig:IO_THROT}
+\end{minipage}
+\noindent
+\begin{minipage}[b]{0.45\textwidth}
+\centering
+\includegraphics[width=0.96\textwidth]{data_agg_step_wise.png}
+\subcaption{Stepwise data aggregation}
+\label{fig:STEP_WISE_AGG}
+\end{minipage}
+\caption{I/O request throttling with stepwise data aggregation}
+\label{fig:IO_THROT_DATA_AGG}
 \end{figure}
 %
 Numbers in circles represent MPI ranks, and red-colored numbers neighboring
-to the circles are the aggregator layout orders.
+to the circles are the aggregator layout orders configured by
+the striping-aware aggregator layout.
+Two-phase I/O consists of repetitive operations of
+data aggregation on every aggregator and I/O accesses by aggregators.
 We may have I/O request contention on OSTs
-if we have I/O requests simultaneously from all aggregators.
-The I/O throttling shown in this figure alleviates I/O request contention
-on OSTs by issuing I/O requests from aggregators in each group in a stepwise manner,
-by relaying tokens from an aggregator that finishes
-I/O accesses to an aggregator in the next step.
+if we have I/O accesses simultaneously from all aggregators.
+The I/O throttling scheme shown in this figure alleviates I/O request contention
+on OSTs by issuing I/O requests from aggregators in each group in a stepwise manner
+from the younger number group by relaying tokens from an aggregator that finishes
+I/O accesses to a corresponding aggregator in the next group.
 The number of groups can be tuned at runtime through {\tt MPI\_Info\_set()}
 or an environment variable.
-Stepwise data aggregation is another optimization associated
+
+Stepwise data aggregation shown in
+Fig.~\ref{fig:IO_THROT_DATA_AGG}\ref{fig:STEP_WISE_AGG}
+is another optimization associated
 with the I/O throttling, where congestion of data transfer
-among compute nodes can be mitigated by reducing congestion
-on aggregators in data aggregation from all processes.
+among compute nodes can be mitigated by stepwise data aggregations
+issued from younger number group.
+In Fig.~\ref{fig:IO_THROT_DATA_AGG}\ref{fig:STEP_WISE_AGG},
+processes in the first group numbered as 0 issues data transfers
+to aggregators on every group, where we describe them
+such as (0,0), (0,1), and (0,7) in the first step.
+In the first step, only the (0,0) is carried out because other groups
+are not ready in data aggregation.
+In the next step, the second group issues data aggregation
+denoted such as (0,1), (1,1), and (7,1), and data aggregations
+for (0,1) and (1,1) are done in this step.
+In the last step, the last group enters in data aggregation phase
+with every group.
 
 Figure~\ref{fig:AGG_RR_LAYOUT} illustrates examples of blocked and round-robin
 aggregator layouts, where we have eight aggregators from 16 processes
@@ -1127,20 +1170,21 @@ provided by the RIKEN Center for Computational Science.
 
 \reviews   % The review section
 
-\subsection*{Reviewer: \href{Optional URL to reviewer page}{Firstname LastName}, Date: 2020-07-07}
+\subsection*{Reviewer: \href{Optional URL to reviewer page}{Firstname LastName}, Date: 2021-04-16}
 
 \paragraph{Overall summary and proposal for acceptance}
-
+What makes the reviewer deeply influenced in this manuscript is that the experiment is very rich. The main shortcomings of the manuscript are: (1) lack of discussion on the optimization scheme and technical details (which also leads to the lack of support/explanation in the Section “Experimental Evaluation”: what are the specific measures / improvements to achieve the performance optimization?) (2) The technical schemes and experimental platform are out of date and lack of novelty. (3) The unique software and hardware scheme makes the technical schemes of this draft unrepeatable, which is not in line with the purpose of JHPS. It is suggested that the draft be rejected.
+Others: (1) Page 4, Section 3 “K computer and Its File System Monitoring” -- The system was retired (about two years). In the era of Exascale Supercomputer and intelligent computing, always new architecture and technology can attract readers. (2) Page 8, Section 5 "Enhanced MPI-IO Implementation: EARTH on K", "Its advanced functions are summarized in the following three key optimization parameters described by agg, req, and rr, respectively:" -- This is the main contribution of this draft, but the details are too few. Although the reviewer understands the relevant technical details, the readers may not be sure. On the whole, the contribution of this draft is too little, lack of novelty. (3) Page 10, Section 6 "Experimental Evaluation", Subsection 6.1 "Benchmark configuration" -- K computer has been running for many years. It has run many typical applications and must have collected a lot of real log information. Therefore, I suggest using real application log and system log information instead of being generated by benchmark
 \paragraph{Scope}   % in regards to the journal, i.e., does the topic fit?
-
+Yes. Its topic fits the JHPS.
 \paragraph{Significance}   % of the research, minor vs. major
-
+Minor.
 \paragraph{Readability}   % English and structure appropriate?
-
+Yes.
 \paragraph{Presentation}
-
+It's clear and easy to understand.
 \paragraph{References}   % Correctly formatted?
-
+Yes.
 \paragraph{Correctness}   % Is the research correct
-
+There are some sound.
 \end{document}

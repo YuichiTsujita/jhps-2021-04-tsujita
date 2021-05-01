@@ -108,21 +108,33 @@ and interconnects among I/O nodes in the enhanced MPI-IO implementation.
 HPC systems have been facing the performance gap between computing power and I/O performance.
 Parallel file systems such as GPFS~\cite{gpfs:usenix02} and Lustre~\cite{lustre:web} provide
 a large amount of storage capacity with high I/O bandwidth to bridge the gap.
-Most of the I/O optimization research efforts have addressed to improve I/O performance
-of their implementations in an empirical way using I/O benchmarks rather than
-analyzing I/O activities on target parallel file systems and data transfers through interconnects.
+Most of the I/O optimization research efforts have addressed to improve
+I/O performance of their implementations in an empirical way using I/O benchmarks
+rather than analyzing I/O activities on target parallel file systems
+and data transfers
+through interconnects~\cite{behzad:sc13,bhimji:cug16,tessier:com-hpc16,vazhkudai:sc18,oral:sc19}.
 With an increase in the number of compute nodes and target I/O nodes,
 it is quite difficult to tune an implementation only through such benchmark runs.
+Holistic log analysis has been proposed in order to investigate
+I/O performance bottlenecks or to tune I/O performance of
+applications~\cite{lockwood:cug18,yang:nsdi2019}.
+Such analysis collects log data about file system activities in addition to
+I/O performance results of applications.
 
-A profiling tool named Tofu~PA~\cite{profiler:fujitsu-tech-si} is provided on the K computer,
-which acquired statistical information called Tofu~PA information regarding communication
-in the Tofu interconnects~\cite{tofu:micro2012} on used compute nodes, with the purpose
-to tune communications among compute nodes.
+A profiling tool named Tofu~PA~\cite{profiler:fujitsu-tech-si} was provided
+in the K computer, which acquired statistical information called Tofu~PA information
+regarding communication in the Tofu interconnects~\cite{tofu:micro2012}
+on used compute nodes, with the purpose to tune communications among compute nodes.
 However, there were no tools to get the Tofu~PA information of Tofu interconnects
 among I/O nodes and I/O activities of its parallel file systems.
-A well-balanced I/O workload among compute nodes, I/O nodes, and parallel file systems
-is required to optimize I/O operations. Without knowing the status of I/O nodes
-and parallel file systems, it is quite difficult to tune I/O operations in HPC applications.
+Similar to other HPC platforms, we have done I/O benchmark runs
+to evaluate and tune performance of I/O subsystems in empirical way
+in the K computer.
+For investigating I/O performance bottlenecks and further I/O performance improvements,
+a well-balanced I/O workload among compute nodes, I/O nodes, and parallel file systems
+is required to optimize I/O operations.
+Without knowing the status of I/O nodes and parallel file systems,
+it is quite difficult to tune I/O operations in HPC applications.
 
 It is expected that the utilization of statistics log data of file system servers and
 interconnects provides quite useful metrics for I/O performance tuning by examining statistics
@@ -198,8 +210,9 @@ between client and server-side activities.
 
 Interconnects are also one of the key components in HPC systems. Monitoring data transfers of
 interconnects has provided a hot-spot of traffic congestion for instance,
-and such approaches have succeeded in analysis of application activities associated with
-the traffic condition~\cite{zimmer:cug16,kumar:DSN2018}.
+and such approaches have succeeded in analysis of application activities
+or performance impact associated with
+the traffic condition~\cite{zimmer:cug16,kumar:DSN2018,chunduri:pmbs19}.
 However, it is not sufficient to characterize I/O activities on parallel file systems
 in HPC systems.
 
@@ -335,9 +348,9 @@ The proposed analysis framework utilizes the following log data from a large amo
 \item {\tt I/O rates}: Amount of size in read and write operations on every OST
 \end{itemize}
 %
-Only the {\tt I/O stats} have been collected at 1 minute intervals, while the remainings have been
-collected at 10 minute intervals.
-The 10 minute intervals were selected for the I/O related monitoring as trial
+Only the {\tt I/O stats} have been collected at one minute intervals,
+while the remainings have been collected at ten minute intervals.
+The ten minute intervals were selected for the I/O related monitoring as trial
 in a conservative manner not to affect I/O node activities for stable production runs
 from our empirical study in the last few months of the K computer operation.
 Limited storage space for the I/O related log-collection is another reason
@@ -345,9 +358,9 @@ in the last few months of the K computer operation since we have already collect
 a huge size of recorded information on the log-collection server
 from other high-priority components of the K computer for a long time.
 
-The {\tt Tofu stats} consist of the following packet processing metrics of the 10 links,
-which are obtained from a TNR of each I/O node through the Tofu~PA information
-in each 10 minutes interval:
+The {\tt Tofu stats} consist of the following packet processing metrics
+of the ten links, which are obtained from a TNR of each I/O node through
+the Tofu~PA information in each ten minute interval:
 %
 \begin{itemize}
 \item Cycle counts until target transfer buffer was available in packet transfers
@@ -375,8 +388,8 @@ The {\tt I/O rates} give us I/O throughput status at each OST over time.
 Collected I/O throughput information is expected to show I/O behavior that happened
 on each OST.
 Due to the reasons described above, we have examined I/O activities
-in the two I/O benchmark runs at 10 minute intervals as trial,
-where each I/O benchmark run took around 10 minutes so that we could observe
+in the two I/O benchmark runs at ten minute intervals as trial,
+where each I/O benchmark run took around ten minutes so that we could observe
 I/O activities of each I/O benchmark run.
 Minimization of monitoring interval time is our future work in our next HPC system.
 
@@ -565,23 +578,28 @@ or an environment variable.
 
 Stepwise data aggregation shown in
 Fig.~\ref{fig:IO_THROT_DATA_AGG}\ref{fig:STEP_WISE_AGG}
-is another optimization associated
-with the I/O throttling, where congestion of data transfer
-among compute nodes can be mitigated by stepwise data aggregations
-issued from younger number group.
-In Fig.~\ref{fig:IO_THROT_DATA_AGG}\ref{fig:STEP_WISE_AGG},
-processes in the first group numbered as 0 issues data transfers
-to aggregators on every group, where we describe them
-such as (0,0), (0,1), and (0,7) in the first step.
-In the first step, only the (0,0) is carried out because other groups
-are not ready in data aggregation.
-In the next step, the second group issues data aggregation
-denoted such as (0,1), (1,1), and (7,1), and data aggregations
-for (0,1) and (1,1) are done in this step.
-In the last step, the last group enters in data aggregation phase
-with every group.
+is another optimization associated with the I/O throttling.
+Compared with simultaneous data aggregation by all the processes,
+we can eliminate congestion in data transfers among compute nodes
+by stepwise data aggregations issued from younger number group.
+In this figure, we represent data aggregation between
+the groups numbered by $i$ and $j$ as $(i,j)$,
+which is equivalent to $(j,i)$.
+In the first step (step=1), processes in the first group numbered as 0
+issues data transfers to aggregators on every group
+numbered from 0 to 7, described by $(0,k)$, where $k=0\mathchar`-7$.
+However, in the first step, only the $(0,0)$ is carried out
+because other groups are not ready in data aggregation.
+In the next step (step=2), the second group numbered as 1 initiates
+data aggregation of $(1,k)$, where $k=0\mathchar`-7$,
+and only data aggregations of $(0,1)$, which is equivalent to $(1,0)$,
+and $(1,1)$ complete in this step.
+Finally in the last step (step=8), the last group numbered as 7
+issues data aggregations of $(7,k)$, where $k=0\mathchar`-7$.
+Then all the remaining aggregations remarked by $(k,7)$,
+where $k=0\mathchar`-7$, complete in this step.
 
-Figure~\ref{fig:AGG_RR_LAYOUT} illustrates examples of blocked and round-robin
+Figure~\ref{fig:AGG_RR_LAYOUT} depicts examples of blocked and round-robin
 aggregator layouts, where we have eight aggregators from 16 processes
 deployed among four compute nodes in a blocked layout.
 %
@@ -600,38 +618,40 @@ deployed among four compute nodes in a blocked layout.
 \subcaption{Round-robin layout}
 \label{fig:RR_LAYOUT}
 \end{minipage}
-\caption{Aggregator layouts with blocked and round-robin manners with
-I/O throttling and step-wise data aggregation in write operations}
+\caption{Aggregator layouts with blocked and round-robin manners,
+utilizing I/O throttling and step-wise data aggregation in write operations}
 \label{fig:AGG_RR_LAYOUT}
 \end{figure}
 %
-Horizontal arrows remarked by "R", "A", and "W" represent
+Horizontal colored arrows remarked by "R", "A", and "W" represent
 read, data aggregation, and write phases in two-phase I/O of collective write
 operations, respectively.
-I/O throttling scheme exchanges tokens among aggregators.
+I/O throttling scheme relays tokens among aggregators.
 If we have a blocked aggregator layout as shown in
 Fig.~\ref{fig:AGG_RR_LAYOUT}\subref{fig:BLK_LAYOUT},
 four processes in the two compute nodes ("CN \#0" and "CN \#1")
-act as aggregators, which are arranged for MPI ranks from 0 to 7.
+act as aggregators, which are from 0 to 7 in MPI rank.
 As a result, we may have contention inside the same compute node
 to proceed each phase in the two-phase I/O.
 It is also remarked that such layout leads to high I/O workload
-in each node.
+in each node compared with other compute nodes without aggregators.
 Meanwhile the round-robin aggregator layout in
 Fig.~\ref{fig:AGG_RR_LAYOUT}\subref{fig:RR_LAYOUT}
 can distribute I/O workload evenly
 among compute nodes, and it also prevents aggregators
-from I/O access congestion on the same compute node
+from I/O access contention on the same compute node
 by reducing the number of aggregators in the same compute node.
 %% if we have multiple aggregators on a subset of compute nodes.
 
-Although the above enhancements outperformed the original version
-in an empirical study using I/O benchmark runs, there were not any examinations
-to know performance impact of those optimizations because there were no tools
-to characterize optimization effects in data transfers among I/O nodes and
-I/O accesses against the LFS at the K computer.
-By using the proposed framework, we examine their advanced features at the K computer
-in the following section.
+Although the above enhancements have outperformed the original version
+in an empirical study using I/O benchmark runs~\cite{tsujita:WS_EuroMPI2014,tsujita:hpcasia18},
+there have not been any examinations to investigate performance impact
+of those optimizations in I/O nodes or underlying file systems.
+One of the main reasons is the lack of tools to characterize optimization
+effects in data transfers among I/O nodes and I/O accesses
+against the LFS at the K computer.
+By using the proposed framework, we examine their advanced features
+at the K computer in the following section.
 
 \section{Experimental Evaluation}
 \label{sec:EVAL}
@@ -1153,9 +1173,32 @@ from collected log data with a fine-grained monitoring interval.
 Although the system configuration of the Fugaku is different from the K computer,
 the enhanced Tofu interconnects called TofuD~\cite{tofuD:cluster2018}
 is used, and we can monitor Tofu packet status through TNRs of TofuD.
+Unfortunately, we did not have any chance to relate real application jobs with
+the proposed framework in the K computer because the implementation and the evaluation
+were done only for the last few months before the K computer termination as trial.
+Such evaluation would be our future work if we have chance to deploy
+the similar framework in the supercomputer Fugaku.
 The proposed analysis framework with a customization for the Fugaku
 is expected to be useful for I/O performance tuning by monitoring I/O workloads
 of I/O nodes and file systems or data transfers on the interconnects.
+
+We did not have any enhanced work about the proposed framework
+on other HPC platforms.
+However, we consider that the framework can be easily enhanced
+since the framework has been built by open source environment
+such as {\itshape Python}.
+Although it is partially lack of generality by using logs of Tofu and FEFS,
+which are specific in Fujitsu's machine,
+we can enhance its portability by having an abstract layer
+on top of underlying system-dependent interface layer.
+Other interconnects such as Gemini or Aries from Cray
+also provide the similar hardware counters, and
+they have been used in log analysis
+studies~\cite{chunduri:pmbs19,ahlgren:cug18,zimmer:cug16,pedretti:cug13}.
+Besides, metrics extracted from FEFS are ones derived from Lustre,
+and they are also available in Lustre technology.
+In this context, enhancements on other HPC platforms would be
+another challenge.
 
 \subsection*{Acknowledgment}
 

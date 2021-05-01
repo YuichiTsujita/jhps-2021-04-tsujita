@@ -304,20 +304,28 @@ It is noted that an I/O path from each compute node is automatically routed to
 an I/O node (either of BIO, GIO, and LIO) on the same Z-link,
 then routed to a target OSS running on an LIO.
 
-Performance profiling tools including Tofu~PA addressed to tune performance of compute nodes
-and communications among compute nodes.
-It is noted that the similar tools are available at Fugaku
-as remarked in FAQ of \cite{fugaku_info:web}.
+Performance profiling tools including Tofu~PA addressed to tune performance of
+compute nodes and communications among compute nodes.
+It is noted that the similar profiling tool is available at Fugaku.
+%% as remarked  of \cite{fugaku_info:web}.
 The tools have succeeded to leverage computing potential of the K computer,
-especially in tuning applications utilizing a large number of compute nodes.
+especially in tuning applications utilizing a large number of compute nodes
+in terms of data transfer status of each node in addition to CPU and memory usage.
 The only way to tune I/O operations is benchmark evaluations
 because there was not any I/O profiling tool for users to profile activities
-of I/O nodes and parallel file systems including the Tofu~PA information among I/O nodes.
-Therefore, it was quite difficult to tune I/O operations using only the existing profiling tools.
+of I/O nodes and parallel file systems.
+%% including the Tofu~PA information among I/O nodes.
+Therefore, it was quite difficult to tune I/O operations using
+only the existing profiling tools.
 
 \subsection{Log collection for monitoring the LFS}
 
-In the K computer operation, we have collected log data from servers associated with the LFS as shown in Figure~\ref{fig:Log-collect-K}.
+We have addressed to extract I/O activity information of the LFS
+in order to investigate operation status of the LFS
+for not only finding malfunctions but also performance tuning.
+In this context, we have been conducting to collect log data from servers
+associated with the LFS during the K computer operation
+as shown in Figure~\ref{fig:Log-collect-K}.
 %
 \begin{figure}[tb]
 \centering
@@ -325,9 +333,10 @@ In the K computer operation, we have collected log data from servers associated 
 \caption{Log collection from I/O nodes}
 \label{fig:Log-collect-K}
 \end{figure}
-%
+%/
 We have deployed {\itshape fluentd} to collect performance metrics associated with
-I/O operations from 5,184 I/O nodes including 2,592 LIOs which also acted as OSSes for the LFS.
+I/O operations from 5,184 I/O nodes including 2,592 LIOs which also acted as OSSes
+for the LFS.
 
 % The number of available OSTs at the LFS is uniquely configured based on the shape of
 % assigned compute nodes according to the I/O zoning scheme~\cite{sumimoto:LUG2011}.
@@ -374,32 +383,36 @@ We enforced to retrieve those metrics from a TNR at every I/O node
 during the K computer operation for about a few months
 until the end of the K computer operation.
 
-The {\tt I/O stats} consist of the same statistics with those of a standard Lustre,
-where we especially focus on the three statistics; {\tt req\_qdepth}, {\tt req\_active},
-and {\tt req\_waittime}.
+The {\tt I/O stats} consist of the same statistics with an original Lustre,
+where we especially focus on the three statistics;
+{\tt req\_qdepth}, {\tt req\_active}, and {\tt req\_waittime}.
 Such statistics give the status of I/O requests coming from compute nodes through I/O nodes.
 For instance, a large value in both {\tt req\_qdepth} and {\tt req\_waittime} indicates
 very busy status of OSSes or idle status of OSSes waiting for the next operation
 due to heavy load of an MDS before I/O accesses for instance.
 Such a situation is not suitable for effective I/O operations.
 {\tt req\_active} indicates the number of active threads for I/O operations.
-High numbers in only {\tt req\_active} indicate a very good condition in terms of I/O accesses.
+High numbers in only {\tt req\_active} indicate a very good condition
+in terms of I/O accesses.
 The {\tt I/O rates} give us I/O throughput status at each OST over time.
-Collected I/O throughput information is expected to show I/O behavior that happened
-on each OST.
+Collected I/O throughput information is expected to show I/O behavior
+that happened on each OST, which OST is active or not or how much I/O bandwidth
+achieved in each OST, for instance.
 Due to the reasons described above, we have examined I/O activities
 in the two I/O benchmark runs at ten minute intervals as trial,
-where each I/O benchmark run took around ten minutes so that we could observe
-I/O activities of each I/O benchmark run.
-Minimization of monitoring interval time is our future work in our next HPC system.
+where each I/O benchmark run took around ten minutes
+so that we could observe I/O activities of each I/O benchmark run.
+Minimization of monitoring interval time is our future work
+in our next HPC system, the supercomputer Fugaku.
 
 \subsection{Database for executed jobs}
 
-The PostgreSQL database server has collected information of executed jobs at the K computer
-on the JOB-DB database.
-The JOB-DB keeps used compute nodes, elapsed time, and start and finish times of job execution,
-for instance by associating with a JOB-ID.
-Therefore, we can refer to information about a target job from the JOB-DB by specifying a JOB-ID.
+The PostgreSQL database server has collected information of executed jobs
+at the K computer on the JOB-DB database.
+The JOB-DB keeps used compute nodes, elapsed time, and start and finish times
+of job execution, for instance by associating with a JOB-ID.
+Therefore, we can refer to information about a target job from the JOB-DB
+by specifying a JOB-ID.
 
 \section{Analysis Framework for I/O Activities}
 \label{sec:ANAL_SYS}
@@ -659,6 +672,9 @@ at the K computer in the following section.
 We evaluated the proposed framework at the K computer to compare
 the original MPI-IO implementation and EARTH using IOR~\cite{IOR:web}
 and HPIO~\cite{ching:ipdps06}.
+Although the K computer has been already dismantled,
+we believe that results and experiences obtained from this evaluation
+gives useful hints for on-going HPC systems including the supercomputer Fugaku.
 IOR performs different file creation modes; accessing
 file per rank and shared access to a single file, and we utilize
 the shared access with collective MPI-IO.
@@ -675,7 +691,7 @@ In both runs, 1,536 processes worked as aggregators, where aggregator assignment
 was aligned to ascending order in MPI ranks from zero in the original MPI-IO,
 while aggregator assignment was defined according to optimization configuration
 of the EARTH.
-In this paper, original stands for the original MPI-IO, while a combination of
+In this paper, {\tt original} stands for the original MPI-IO, while a combination of
 the three optimization parameters ({\tt agg}, {\tt rr} and {\tt req}) indicates
 the usage of EARTH.
 Concerning the EARTH case, {\tt agg=1} stands for striping-aware aggregator layout
@@ -700,32 +716,35 @@ $ ior -i 5 -a MPIIO -c -U hints_info -k -m -vvv -w -t 256m -b 256m \
     -o ${TARGET_DIR}/test-IOR.dat -d 0.1
 \end{verbatim}
 %
-The same command with just changing "-w" by "-r" was executed,
-followed by write operations in every parameter configuration.
-"{\tt hints\_info}", is a file describing some hints to set the number of processes per node,
-and so forth.
+We executed read operations with the same command changing "-w" by "-r",
+followed by write operations with the above command
+in every optimization parameter configuration.
+"{\tt hints\_info}", is a file describing some hints associated with
+I/O operations as shown in Fig.~\ref{fig:IOR_HINTS}.
+%
+\begin{figure}[tb]
+\begin{verbatim}
+        IOR_HINT__MPI__romio_lustre_co_ratio=8
+        IOR_HINT__MPI__cb_config_list=*:4
+        IOR_HINT__MPI__romio_cb_read=enable
+        IOR_HINT__MPI__romio_cb_write=enable
+\end{verbatim}
+\caption{Hints passed to the IOR benchmark code}
+\label{fig:IOR_HINTS}
+\end{figure}
+%
+The first line set the number of aggregators as eight times of stripe count,
+thus 1,536 processes acted as aggregators.
+The second line informed MPI-IO implementation that there were 4 processes
+per compute node.
+The last two lines insisted collective buffering in the two-phase I/O of ROMIO.
+
 A target file ({\tt test-IOR.dat}) was generated in the directory
-({\tt \$\{TARGET\_DIR\}})
-with 192 stripe count.
+({\tt \$\{TARGET\_DIR\}}) with 192 stripe count.
 We carried out collective MPI-IO with and without two-phase I/O by enabling
-or disabling its option through the "{\tt hints\_info}."
+or disabling "{\tt romio\_cb\_write}" and "{\tt romio\_cb\_read}"
+through the "{\tt hints\_info}."
 %
-% \begin{figure}[tb]
-% \scriptsize
-% \begin{verbatim}
-% IOR_HINT__MPI__romio_lustre_co_ratio=8
-% IOR_HINT__MPI__cb_config_list=*:4
-% IOR_HINT__MPI__romio_cb_read=enable
-% IOR_HINT__MPI__romio_cb_write=enable
-% \end{verbatim}
-% \caption{Hints passed to the IOR benchmark code}
-% \label{fig:IOR_HINTS}
-% \end{figure}
-%
-% The first line set the number of aggregators as 8 times of stripe count,
-% thus 1,536 processes acted as aggregators.
-% The second line informed MPI-IO implementation that there were 4 processes per compute node.
-% The last two lines insisted collective buffering in the two-phase I/O of ROMIO.
 
 \subsubsection{HPIO}
 
@@ -1166,24 +1185,26 @@ The framework also informed us how much the impact in I/O activities at the LFS
 and bandwidth utilization of the Tofu links of I/O nodes
 among several optimization configurations of the EARTH.
 
-Our future work is building a similar framework in our next HPC system
-named Fugaku~\cite{fugaku_info:web} with more sophisticated organization
+Our future work is building a similar framework in our next HPC system,
+the supercomputer Fugaku~\cite{fugaku_info:web} with more sophisticated organization
 of the database to cover all essential performance metrics
 from collected log data with a fine-grained monitoring interval.
 Although the system configuration of the Fugaku is different from the K computer,
 the enhanced Tofu interconnects called TofuD~\cite{tofuD:cluster2018}
-is used, and we can monitor Tofu packet status through TNRs of TofuD.
+is used, and we can monitor Tofu data transfer packet status through TNRs of TofuD.
 Unfortunately, we did not have any chance to relate real application jobs with
 the proposed framework in the K computer because the implementation and the evaluation
 were done only for the last few months before the K computer termination as trial.
 Such evaluation would be our future work if we have chance to deploy
 the similar framework in the supercomputer Fugaku.
-The proposed analysis framework with a customization for the Fugaku
+The proposed analysis framework with some enhancements for the supercomputer Fugaku
 is expected to be useful for I/O performance tuning by monitoring I/O workloads
-of I/O nodes and file systems or data transfers on the interconnects.
+of I/O nodes and file systems or data transfers on TofuD interconnects.
+According to some confidential issues with vendors,
+we can not describe anything about the framework at the supercomputer Fugaku.
 
 We did not have any enhanced work about the proposed framework
-on other HPC platforms.
+on other HPC platforms unfortunately.
 However, we consider that the framework can be easily enhanced
 since the framework has been built by open source environment
 such as {\itshape Python}.

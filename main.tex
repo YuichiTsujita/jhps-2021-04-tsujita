@@ -687,13 +687,15 @@ from other jobs. According to the 3D layout of assigned compute nodes,
 to use all available OSTs.
 We set 256~MiB and 64~MiB in stripe size in the IOR run and the HPIO run, respectively.
 
-In both runs, 1,536 processes worked as aggregators, where aggregator assignment
-was aligned to ascending order in MPI ranks from zero in the original MPI-IO,
-while aggregator assignment was defined according to optimization configuration
-of the EARTH.
-In this paper, {\tt original} stands for the original MPI-IO, while a combination of
-the three optimization parameters ({\tt agg}, {\tt rr} and {\tt req}) indicates
-the usage of EARTH.
+In both benchmark runs, every processes worked as aggregators
+with ascending order layout in MPI ranks from zero in the original MPI-IO
+under default configuration.
+On the one hand, 6,144 processes were chosen to be aggregators in the EARTH case
+in order to examine performance impact of aggregator layout among compute nodes
+according to optimization configuration of the EARTH.
+In this paper, {\tt original} stands for the original MPI-IO,
+while a combination of the three optimization parameters
+({\tt agg}, {\tt rr} and {\tt req}) indicates MPI-IO of the EARTH.
 Concerning the EARTH case, {\tt agg=1} stands for striping-aware aggregator layout
 and {\tt rr=1} denotes round-robin aggregator layout among compute nodes.
 A zero value in each case stands for deactivation in the corresponding layout optimization.
@@ -720,25 +722,19 @@ We executed read operations with the same command changing "-w" by "-r",
 followed by write operations with the above command
 in every optimization parameter configuration.
 "{\tt hints\_info}", is a file describing some hints associated with
-I/O operations as shown in Fig.~\ref{fig:IOR_HINTS}.
+I/O operations such as the number of processes per node and so forth.
 %
-\begin{figure}[tb]
-\begin{verbatim}
-        IOR_HINT__MPI__romio_lustre_co_ratio=8
-        IOR_HINT__MPI__cb_config_list=*:4
-        IOR_HINT__MPI__romio_cb_read=enable
-        IOR_HINT__MPI__romio_cb_write=enable
-\end{verbatim}
-\caption{Hints passed to the IOR benchmark code}
-\label{fig:IOR_HINTS}
-\end{figure}
+% \begin{figure}[tb]
+% \begin{verbatim}
+%        IOR_HINT__MPI__romio_lustre_co_ratio=32
+%        IOR_HINT__MPI__cb_config_list=*:4
+%        IOR_HINT__MPI__romio_cb_read=enable
+%        IOR_HINT__MPI__romio_cb_write=enable
+% \end{verbatim}
+% \caption{Hints passed to the IOR benchmark code}
+% \label{fig:IOR_HINTS}
+% \end{figure}
 %
-The first line set the number of aggregators as eight times of stripe count,
-thus 1,536 processes acted as aggregators.
-The second line informed MPI-IO implementation that there were 4 processes
-per compute node.
-The last two lines insisted collective buffering in the two-phase I/O of ROMIO.
-
 A target file ({\tt test-IOR.dat}) was generated in the directory
 ({\tt \$\{TARGET\_DIR\}}) with 192 stripe count.
 We carried out collective MPI-IO with and without two-phase I/O by enabling
@@ -751,13 +747,18 @@ through the "{\tt hints\_info}."
 We executed the following command for write operations to generate
 a shared file of about 2.1~TiB ($\approx$ (5,992~B + 256~B) $\times$ 12,288 $\times$ 30,729 - 256~B)
 per iteration, followed by read operations in non-contiguous access pattern
-on a target file with specifying the number of processes per node ({\tt -H cb\_config\_list=*:4}):
+on a target file with specifying the number of processes per node ({\tt -H cb\_config\_list=*:4}) and parameter to tune the number of aggregators to be
+6,144 (=$192 \times 32$):
 %
 \begin{verbatim}
-$ hpio -n 12288 -r 6 -B -s 5994 -c 30720 -p 256 -m 01 -O 11 -f 0 \
-  -S 0 -a 0 -g 2 -H cb_config_list=*:4 -d ${TARGET_DIR} -w 1
+$ hpio -n 12288 -n 0010 -r 6 -B -s 5992 -c 30729 -p 256 -m 01 -O 11 -f 0 \
+  -S 0 -a 0 -g 2 -H cb_config_list=*:4 -H romio_lustre_co_ratio=32 \
+  -d ${TARGET_DIR} -w 1
 \end{verbatim}
 %
+Note that the option, "{\tt cb\_config\_list}" was available only for
+the EARTH case, and thus all processes worked as aggregators
+in the original case as we explained.
 The target file was generated in the directory {\tt \$\{TARGET\_DIR\}}
 with 192 stripe count. We carried out the collective MPI-IO
 only with two-phase I/O because collective MPI-IO without two-phase I/O was
@@ -1191,7 +1192,9 @@ of the database to cover all essential performance metrics
 from collected log data with a fine-grained monitoring interval.
 Although the system configuration of the Fugaku is different from the K computer,
 the enhanced Tofu interconnects called TofuD~\cite{tofuD:cluster2018}
-is used, and we can monitor Tofu data transfer packet status through TNRs of TofuD.
+is used.
+This means that we can monitor Tofu data transfer packet status
+through TNRs of TofuD.
 Unfortunately, we did not have any chance to relate real application jobs with
 the proposed framework in the K computer because the implementation and the evaluation
 were done only for the last few months before the K computer termination as trial.
@@ -1216,8 +1219,9 @@ Other interconnects such as Gemini or Aries from Cray
 also provide the similar hardware counters, and
 they have been used in log analysis
 studies~\cite{chunduri:pmbs19,ahlgren:cug18,zimmer:cug16,pedretti:cug13}.
-Besides, metrics extracted from FEFS are ones derived from Lustre,
-and they are also available in Lustre technology.
+Besides, metrics extracted from FEFS are ones available in Lustre.
+Therefore it would be easy to utilize the same metrics in
+other HPC platforms utilizing Lustre file systems.
 In this context, enhancements on other HPC platforms would be
 another challenge.
 

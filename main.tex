@@ -115,9 +115,9 @@ and data transfers
 through interconnects~\cite{behzad:sc13,bhimji:cug16,tessier:com-hpc16,vazhkudai:sc18,oral:sc19}.
 With an increase in the number of compute nodes and target I/O nodes,
 it is quite difficult to tune an implementation only through such benchmark runs.
-Holistic log analysis has been proposed in order to investigate
-I/O performance bottlenecks or to tune I/O performance of
-applications~\cite{lockwood:cug18,yang:nsdi2019}.
+Holistic log analysis has been proposed for investigating I/O performance bottlenecks
+or I/O performance tuning
+of applications~\cite{lockwood:cug18,wang:cluster18,yang:nsdi2019}.
 Such analysis collects log data about file system activities in addition to
 I/O performance results of applications.
 
@@ -217,22 +217,30 @@ However, it is not sufficient to characterize I/O activities on parallel file sy
 in HPC systems.
 
 Recently, holistic I/O monitoring has been proposed
-in several research works~\cite{lockwood:cug18,yang:nsdi2019}.
+in several research works~\cite{lockwood:cug18,wang:cluster18,yang:nsdi2019}.
 Lockwood et al. have proposed a holistic I/O monitoring framework
 named TOKIO~\cite{lockwood:cug18}.
 It consisted of several components for monitoring, analysis and visualization
-for administrators and users. The work in \cite{yang:nsdi2019} has proposed
-a monitoring framework named Beacon.
+for administrators and users.
+Wang et al. have proposed a monitoring and analysis framework
+named IOMiner~\cite{wang:cluster18}, where Darshan~\cite{darshan:web}
+has been introduced for collecting I/O performance metrics.
+Application users can easily identify root cause of
+poor I/O performance with the framework from a plenty of log data
+associated with I/O subsystems.
+Yang et al. has proposed a monitoring framework
+named Beacon~\cite{yang:nsdi2019}.
 This framework provides a collection of monitoring tools for Metadata Servers (MDSes)
 and Object Storage Servers (OSSes) and analysis functions,
 including some visualization interface. These works are similar to our work regarding
 holistic approach in characterization of I/O activities.
 
-In contrast, our work addresses analysis of I/O activities through holistic log data analysis
-of Tofu interconnects and parallel file systems including associated I/O nodes.
+In contrast, our work addresses analysis of I/O activities through holistic
+log data analysis of Tofu interconnects and parallel file systems including
+associated I/O nodes.
 The uniqueness of this work is a holistic analysis framework using data transfer status
-on interconnects among I/O nodes and associated I/O activity traces at parallel file systems.
-
+on interconnects among I/O nodes and associated I/O activity traces
+at parallel file systems.
 
 \section{K computer and Its File System Monitoring}\label{sec:K_OVERVIEW}
 \label{sec:K_COMP}
@@ -669,9 +677,10 @@ at the K computer in the following section.
 \section{Experimental Evaluation}
 \label{sec:EVAL}
 
-We evaluated the proposed framework at the K computer to compare
-the original MPI-IO implementation and EARTH using IOR~\cite{IOR:web}
-and HPIO~\cite{ching:ipdps06}.
+We conducted to examine functionalities of the proposed framework
+at the K computer through two I/O benchmark runs,
+IOR~\cite{IOR:web} and HPIO~\cite{ching:ipdps06},
+using the original MPI-IO implementation and EARTH.
 Although the K computer has been already dismantled,
 we believe that results and experiences obtained from this evaluation
 gives useful hints for on-going HPC systems including the supercomputer Fugaku.

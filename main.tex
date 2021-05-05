@@ -425,6 +425,7 @@ by specifying a JOB-ID.
 \section{Analysis Framework for I/O Activities}
 \label{sec:ANAL_SYS}
 
+We have built an analysis framework using {\itshape Python}.
 Figure~\ref{fig:LOG_ANAL_SYS} depicts an overview of the implemented analysis framework,
 which is connected with associated log data collected by {\itshape fluentd}
 and the JOB-DB to analyze I/O activities on I/O nodes and the LFS.
@@ -502,8 +503,9 @@ in underlying interconnects among I/O nodes or OST activities.
 In this context, we have investigated some advanced functions of
 this implementation with the proposed framework.
 
-Its advanced performance optimizations are summarized in the following
-three key optimization parameters described by {\tt agg}, {\tt req}, and {\tt rr}, respectively:
+Compared with the original MPI-IO, EARTH has advanced optimizations
+controlled by the following three parameters described by {\tt agg}, {\tt req},
+and {\tt rr}, respectively:
 %
 \begin{itemize}
 \item {\tt agg}: Striping-aware aggregator layout
@@ -550,17 +552,17 @@ the order of striping accesses.
 \label{fig:AGG_STR_AWARE}
 \end{figure}
 %
-By placing aggregators in the order of MPI ranks
-as shown in Fig.~\ref{fig:AGG_STR_AWARE}\subref{fig:WO_STR_AWARE},
+By placing aggregators in an MPI rank order
+as shown in Fig.~\ref{fig:WO_STR_AWARE},
 we may face contention in a path towards target OSTs.
 On the other hand, a striping-aware layout shown in
-Fig.~\ref{fig:AGG_STR_AWARE} \subref{fig:WITH_STR_AWARE},
+Fig.~\ref{fig:WITH_STR_AWARE},
 renumbering the order of aggregators in the red-colored numbers,
 eliminates data transfer congestion on every I/O path
 because I/O flows of every I/O path towards a target OST are
 evenly distributed for a striping access pattern against OSTs.
 
-Figure~\ref{fig:IO_THROT_DATA_AGG}\ref{fig:IO_THROT} illustrates
+Figure~\ref{fig:IO_THROT} illustrates
 I/O throttling scheme operated by 192 aggregators accessing 12 OSTs,
 where we assume every process acts as an aggregator.
 %
@@ -598,7 +600,7 @@ The number of groups can be tuned at runtime through {\tt MPI\_Info\_set()}
 or an environment variable.
 
 Stepwise data aggregation shown in
-Fig.~\ref{fig:IO_THROT_DATA_AGG}\ref{fig:STEP_WISE_AGG}
+Fig.~\ref{fig:STEP_WISE_AGG}
 is another optimization associated with the I/O throttling.
 Compared with simultaneous data aggregation by all the processes,
 we can eliminate congestion in data transfers among compute nodes
@@ -649,7 +651,7 @@ read, data aggregation, and write phases in two-phase I/O of collective write
 operations, respectively.
 I/O throttling scheme relays tokens among aggregators.
 If we have a blocked aggregator layout as shown in
-Fig.~\ref{fig:AGG_RR_LAYOUT}\subref{fig:BLK_LAYOUT},
+Fig.~\ref{fig:BLK_LAYOUT},
 four processes in the two compute nodes ("CN \#0" and "CN \#1")
 act as aggregators, which are from 0 to 7 in MPI rank.
 As a result, we may have contention inside the same compute node
@@ -657,7 +659,7 @@ to proceed each phase in the two-phase I/O.
 It is also remarked that such layout leads to high I/O workload
 in each node compared with other compute nodes without aggregators.
 Meanwhile the round-robin aggregator layout in
-Fig.~\ref{fig:AGG_RR_LAYOUT}\subref{fig:RR_LAYOUT}
+Fig.~\ref{fig:RR_LAYOUT}
 can distribute I/O workload evenly
 among compute nodes, and it also prevents aggregators
 from I/O access contention on the same compute node
@@ -680,7 +682,7 @@ at the K computer in the following section.
 We conducted to examine functionalities of the proposed framework
 at the K computer through two I/O benchmark runs,
 IOR~\cite{IOR:web} and HPIO~\cite{ching:ipdps06},
-using the original MPI-IO implementation and EARTH.
+about the original MPI-IO implementation and EARTH.
 Although the K computer has been already dismantled,
 we believe that results and experiences obtained from this evaluation
 gives useful hints for on-going HPC systems including the supercomputer Fugaku.
@@ -815,7 +817,7 @@ Although we have learned optimization effects through such empirical benchmark r
 it has not been clear about the performance impact of the optimization configuration
 on I/O nodes and the LFS.
 
-\subsection{Analysis of OSS stats files}
+\subsection{Analysis of OSS stats}
 
 Figure~\ref{fig:IOR_OST_IO_STATS} shows the mean values of
 {\tt req\_qdepth}, {\tt req\_waittime}, and {\tt req\_active} obtained from OSSes
@@ -826,7 +828,7 @@ during I/O operations at the IOR benchmark run.
 \begin{minipage}[t]{0.88\textwidth}
  \centering
  \includegraphics[width=1.0\textwidth]{IOR-ost_io_stats-qdepth-ext-dual.png}
- \subcaption{{\tt req\_qdepth}}
+ \subcaption{{\tt req\_qdepth} (Left: Overall, Right: Zoomed less than or equal to 600 entries)}
  \label{fig:IOR_req_qdepth}
 \end{minipage}
 %
@@ -834,7 +836,7 @@ during I/O operations at the IOR benchmark run.
 \begin{minipage}[t]{0.88\textwidth}
  \centering
  \includegraphics[width=1.0\textwidth]{IOR-ost_io_stats-waittime-ext-dual.png}
- \subcaption{{\tt req\_waittime}}
+ \subcaption{{\tt req\_waittime} (Left: Overall, Right: Zoomed less than or equal to 800\,ms)}
  \label{fig:IOR_req_waittime}
 \end{minipage}
 %
@@ -852,10 +854,10 @@ during the IOR benchmark run}
 \end{figure}
 %
 The original case had the largest number of requests in a request queue
-as shown in Fig.~\ref{fig:IOR_OST_IO_STATS}\subref{fig:IOR_req_qdepth}.
-Fig.~\ref{fig:IOR_OST_IO_STATS}\subref{fig:IOR_req_waittime}
+as shown in Fig.~\ref{fig:IOR_req_qdepth}.
+Fig.~\ref{fig:IOR_req_waittime}
 tells that this case also took the longest time to proceed requests.
-Besides, Fig.~\ref{fig:IOR_OST_IO_STATS}\subref{fig:IOR_req_active} shows
+Besides, Fig.~\ref{fig:IOR_req_active} shows
 the highest number of I/O threads in the original case.
 Note that the maximum number of threads at each OSS of the LFS was 32
 at the K computer.
@@ -864,10 +866,10 @@ suited for I/O request processing at OSSes.
 
 While the EARTH use case with good I/O performance ({\tt T:agg=1,rr=1,req=4})
 showed quite a small number of requests in the queue as shown in
-Fig.~\ref{fig:IOR_OST_IO_STATS}\subref{fig:IOR_req_qdepth}.
-Fig.~\ref{fig:IOR_OST_IO_STATS}\subref{fig:IOR_req_waittime} also gives
+Fig.~\ref{fig:IOR_req_qdepth}.
+Fig.~\ref{fig:IOR_req_waittime} also gives
 the fact that this case took quite short times to process I/O requests.
-Besides, Fig.~\ref{fig:IOR_OST_IO_STATS}\subref{fig:IOR_req_active}
+Besides, Fig.~\ref{fig:IOR_req_active}
 tells us a high number of I/O threads was active for this case.
 
 Figure~\ref{fig:HPIO_OST_IO_STATS} shows the same statistics obtained
@@ -937,7 +939,7 @@ during the IOR benchmark run}
 %
 
 Concerning bandwidth utilization shown in
-Fig.~\ref{fig:IOR_ION_TOFU_BWU_WAIT_TIME}\subref{fig:IOR_ION_TOFU_BW_UTIL},
+Fig.~\ref{fig:IOR_ION_TOFU_BW_UTIL},
 the original MPI-IO case shows the lowest utilization, while the full set of EARTH 
 optimizations such as “{\tt T:agg=1,rr=1,req=4}” lead to higher bandwidth utilization
 relative to other cases.
@@ -945,13 +947,13 @@ By considering effectiveness in data transfers among I/O nodes via Tofu intercon
 a higher utilization is preferable.
 In this context, the above optimized case was suitable for I/O optimization.
 
-Fig.~\ref{fig:IOR_ION_TOFU_BWU_WAIT_TIME}\subref{fig:IOR_ION_TOFU_WAIT_TIME}
+Fig.~\ref{fig:IOR_ION_TOFU_WAIT_TIME}
 tells us that the enhanced implementation
 without aggregator layout optimization indicated by “{\tt T:agg=0,rr=0,req=4}”
 took the longest times.
 It is also noted that this case also performed the lowest bandwidth utilization
 in write operations as shown in
-Fig.~\ref{fig:IOR_ION_TOFU_BWU_WAIT_TIME}\subref{fig:IOR_ION_TOFU_BW_UTIL}.
+Fig.~\ref{fig:IOR_ION_TOFU_BW_UTIL}.
 It is remarked that the lack of aggregator layout optimization in the EARTH case
 led to a negative impact in data transfers on Tofu interconnects among I/O nodes.
 
@@ -983,10 +985,10 @@ during the HPIO benchmark run}
 %
 The EARTH case with the best configuration ({\tt T:agg=1,rr=1,req=8}) also
 outperformed other cases in
-Fig.~\ref{fig:HPIO_ION_TOFU_BWU_WAIT_TIME}\subref{fig:HPIO_ION_TOFU_BW_UTIL}.
+Fig.~\ref{fig:HPIO_ION_TOFU_BW_UTIL}.
 This case also showed shorter times in both read and write operations
 among the EARTH cases in
-Fig.~\ref{fig:HPIO_ION_TOFU_BWU_WAIT_TIME}\subref{fig:HPIO_ION_TOFU_WAIT_TIME}.
+Fig.~\ref{fig:HPIO_ION_TOFU_WAIT_TIME}.
 
 \subsection{Load balancing in I/O throughput at OSTs}
 
@@ -1032,16 +1034,16 @@ where horizontal and vertical directions indicate subjected relative 2D position
 of used OSTs from the logical 3D layout of the K computer,
 ranging from 0 to 15 and from 0 to 11 in horizontal and vertical directions, respectively.
 
-In the original MPI-IO case in Fig.~\ref{fig:IOR_OST_BW_HMAP_WR}\subref{fig:IOR_OST_WR_ORIG},
+In the original MPI-IO case in Fig.~\ref{fig:IOR_OST_WR_ORIG},
 we can see performance gaps among the left and right sides separated by
 the dotted line.
-Fig.~\ref{fig:IOR_OST_BW_HMAP_WR}\subref{fig:IOR_OST_WR_AGG0_RR0_REQ0}
+Fig.~\ref{fig:IOR_OST_WR_AGG0_RR0_REQ0}
 also shows performance gaps among OSTs
 because of imbalanced aggregator layout although the EARTH was used.
 Both cases are not suitable because total I/O performance is limited
 by the slowest OSTs in parallel I/O.
 While the most optimized case in
-Fig.~\ref{fig:IOR_OST_BW_HMAP_WR}\subref{fig:IOR_OST_WR_AGG1_RR1_REQ4}
+Fig.~\ref{fig:IOR_OST_WR_AGG1_RR1_REQ4}
 shows a well-balanced situation in write throughput among OSTs.
 In the context of parallel I/O characteristics, this case was suitable
 to achieve I/O performance for the benchmark run.
@@ -1083,12 +1085,12 @@ among the 192 OSTs at the IOR benchmark runs.
 \end{figure}
 %
 Imbalanced bandwidth situation is observed in the original MPI-IO case shown in
-Fig.~\ref{fig:IOR_OST_BW_HMAP_RD}\subref{fig:IOR_OST_RD_ORIG}
+Fig.~\ref{fig:IOR_OST_RD_ORIG}
 and the EARTH case without optimization shown
-in Fig.~\ref{fig:IOR_OST_BW_HMAP_RD}\subref{fig:IOR_OST_RD_AGG0_RR0_REQ0}.
+in Fig.~\ref{fig:IOR_OST_RD_AGG0_RR0_REQ0}.
 While well-balanced situation has been achieved in the EARTH case
 with a good optimization configuration as shown in
-Fig.~\ref{fig:IOR_OST_BW_HMAP_RD}\subref{fig:IOR_OST_RD_AGG1_RR1_REQ4},
+Fig.~\ref{fig:IOR_OST_RD_AGG1_RR1_REQ4},
 which has led to high performance in collective I/O.
 
 Write and read bandwidth heat-maps at the HPIO run are also shown in
@@ -1165,7 +1167,7 @@ the highest I/O throughput in the insufficient optimization configuration
 and the full optimization configuration case.
 However, the insufficient configuration case has performed the longest waiting time
 in the Tofu interconnects among the used I/O nodes as shown in
-Fig.~\ref{fig:HPIO_ION_TOFU_BWU_WAIT_TIME}\subref{fig:HPIO_ION_TOFU_WAIT_TIME}
+Fig.~\ref{fig:HPIO_ION_TOFU_WAIT_TIME}
 and thus high I/O bandwidth could not be achieved in this configuration.
 
 \section{Conclusions}
@@ -1215,19 +1217,20 @@ of I/O nodes and file systems or data transfers on TofuD interconnects.
 According to some confidential issues with vendors,
 we can not describe anything about the framework at the supercomputer Fugaku.
 
-We did not have any enhanced work about the proposed framework
-on other HPC platforms unfortunately.
+We did not have any enhanced works about the proposed framework
+in other HPC platforms unfortunately.
 However, we consider that the framework can be easily enhanced
-since the framework has been built by open source environment
-such as {\itshape Python}.
-Although it is partially lack of generality by using logs of Tofu and FEFS,
-which are specific in Fujitsu's machine,
-we can enhance its portability by having an abstract layer
-on top of underlying system-dependent interface layer.
-Other interconnects such as Gemini or Aries from Cray
-also provide the similar hardware counters, and
-they have been used in log analysis
-studies~\cite{chunduri:pmbs19,ahlgren:cug18,zimmer:cug16,pedretti:cug13}.
+in other HPC platforms since the framework has been built
+by open source environment such as {\itshape Python}.
+Although the proposed framework is partially lack of generality
+by using logs of Tofu and FEFS, which were specific subsystems in Fujitsu's machine,
+we can enhance it by having an abstract layer
+on top of underlying system-dependent layer.
+Other interconnects such as Gemini~\cite{alverson:hoti10,pedretti:cug13} or
+Aries~\cite{cray:aries_overview,cray:aries_hardware_counters}
+from Cray also provide the similar hardware counters,
+and they have been used in
+log analysis studies~\cite{chunduri:pmbs19,ahlgren:cug18,zimmer:cug16,pedretti:cug13}.
 Besides, metrics extracted from FEFS are ones available in Lustre.
 Therefore it would be easy to utilize the same metrics in
 other HPC platforms utilizing Lustre file systems.

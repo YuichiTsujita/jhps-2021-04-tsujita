@@ -327,6 +327,7 @@ Therefore, it was quite difficult to tune I/O operations using
 only the existing profiling tools.
 
 \subsection{Log collection for monitoring the LFS}
+\label{ssec:LOG_COLL_MON}
 
 We have addressed to extract I/O activity information of the LFS
 in order to investigate operation status of the LFS
@@ -414,18 +415,38 @@ Minimization of monitoring interval time is our future work
 in our next HPC system, the supercomputer Fugaku.
 
 \subsection{Database for executed jobs}
+\label{ssec:JOB_DB}
 
-The PostgreSQL database server has collected information of executed jobs
-at the K computer on the JOB-DB database.
-The JOB-DB keeps used compute nodes, elapsed time, and start and finish times
-of job execution, for instance by associating with a JOB-ID.
-Therefore, we can refer to information about a target job from the JOB-DB
-by specifying a JOB-ID.
+A database to store job information, which is named JOB-DB,
+has been built on a PostgreSQL database server to refer executed job information.
+We have collected information of executed jobs in the K computer
+on the JOB-DB.
+The JOB-DB kept used compute nodes, compute node layout, elapsed time,
+and start and finish times of job execution, for instance
+by associating with a JOB-ID.
+Therefore, we could refer to information about a target job
+from the JOB-DB by specifying a JOB-ID.
+% We had multiple ways in querying the JOB-DB
+% by direct access through a SQL command
+% and by indirect access through Redash to retrieve information
+% about a target job.
 
 \section{Analysis Framework for I/O Activities}
 \label{sec:ANAL_SYS}
 
-We have built an analysis framework using {\itshape Python}.
+As described in Sec.~\ref{ssec:LOG_COLL_MON} and Sec.~\ref{ssec:JOB_DB},
+we have monitoring and log collection environment in each component
+in the K computer operation.
+However, there was not any environment to have holistic I/O activity analysis
+for the purpose of investigation and performance tuning.
+Considering the complexity in I/O subsystems and I/O software stacks
+in recent HPC systems such as the K computer,
+we have built an analysis framework in cooperation with
+the existing monitoring components described in
+Sec.~\ref{ssec:LOG_COLL_MON} and Sec.~\ref{ssec:JOB_DB}.
+Since the framework needs to work together with several components
+such as the JOB-DB built on a PostgreSQL database and log data collected by {\itshape fluentd},
+we have conducted to build the framework using {\itshape Python}.
 Figure~\ref{fig:LOG_ANAL_SYS} depicts an overview of the implemented analysis framework,
 which is connected with associated log data collected by {\itshape fluentd}
 and the JOB-DB to analyze I/O activities on I/O nodes and the LFS.
@@ -439,12 +460,13 @@ and the JOB-DB to analyze I/O activities on I/O nodes and the LFS.
 %
 Given a target JOB-ID, the framework retrieves information of the JOB-ID
 such as 6D mesh/torus network positions of used compute nodes and names of
-used system racks.
+used system racks from the JOB-DB.
 Such information about used compute nodes and system racks is utilized
 to find used I/O nodes including LIOs from the I/O node table
-because the assigned I/O node layout is configured by the shape of assigned compute nodes.
-Besides, start and finish times of the target job obtained from the JOB-DB were
-used to pick up essential information associated with the JOB-ID
+because the assigned I/O node layout is automatically configured
+by the shape of assigned compute nodes.
+Besides, start and finish times of the target job obtained from the JOB-DB
+are used to pick up essential information associated with the JOB-ID
 from a large amount of log data collected by {\itshape fluentd}.
 
 Once the framework collects all essential information, its log analysis function
@@ -455,16 +477,16 @@ figures out and gives the following information for the given JOB-ID:
 \item I/O performance in both write and read operations on each used OST
 \end{itemize}
 %
-
 The former two performance values are calculated by using the packet transfer metrics
-obtained from the TNR. The function converts the cycle counts into time values
-in the unit of second for the maximum waiting times.
+obtained from the TNR of used Tofu links.
+The function converts the cycle counts obtained from the TNR
+into time values in the unit of second for the maximum waiting times.
 While the bandwidth utilization ratio during the job running is obtained by
-dividing the peak bandwidth of the job by the theoretical bandwidth,
-where the peak bandwidth is obtained from throughput values collected
-in an elapsed time of the specified job. In the proposed framework,
-we use the maximum bandwidth utilization to examine effectiveness
-in packet transfer associated with I/O operations.
+dividing the peak bandwidth of the job by the theoretical bandwidth.
+The peak bandwidth is obtained from throughput values collected
+in an elapsed time of the specified job.
+In the proposed framework, we use the maximum bandwidth utilization
+to examine effectiveness in packet transfer associated with I/O operations.
 
 While the I/O performance values were obtained by dividing an amount of data size
 in read and write operations by a monitoring
@@ -1181,7 +1203,7 @@ among I/O nodes and performance metrics of log data generated at the LFS and I/O
 The holistic analysis of data transfer activities on the Tofu links among I/O nodes
 and I/O activities on the LFS provides useful information in I/O performance tuning.
 
-Two I/O benchmark runs showed distinct differences in I/O activities at the LFS
+The two I/O benchmark runs showed distinct differences in I/O activities at the LFS
 and data transfers through the Tofu links among I/O nodes between the original MPI-IO
 and the enhanced one named EARTH.
 The EARTH with good optimization configuration showed a high number of active threads
@@ -1206,9 +1228,10 @@ the enhanced Tofu interconnects called TofuD~\cite{tofuD:cluster2018}
 is used.
 This means that we can monitor Tofu data transfer packet status
 through TNRs of TofuD.
-Unfortunately, we did not have any chance to relate real application jobs with
-the proposed framework in the K computer because the implementation and the evaluation
-were done only for the last few months before the K computer termination as trial.
+Unfortunately, we did not have any chance to investigate real application jobs
+with the proposed framework in the K computer because the implementation
+and the evaluation were done as trial only for the last few months
+before the K computer termination.
 Such evaluation would be our future work if we have chance to deploy
 the similar framework in the supercomputer Fugaku.
 The proposed analysis framework with some enhancements for the supercomputer Fugaku

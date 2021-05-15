@@ -93,7 +93,7 @@ to cope with the huge demand of data-intensive applications.
 Although most of the HPC systems provide performance tuning tools on compute nodes,
 there is not enough chance to tune I/O activities on parallel file systems,
 including high speed interconnects among compute nodes and file systems.
-We propose an I/O performance optimization framework that uses log data of
+We propose an I/O performance optimization framework that utilizes log data of
 parallel file systems and interconnects in a holistic way
 for improving performance of HPC systems including I/O nodes and parallel file systems.
 We demonstrate our framework at the K computer with two I/O benchmarks
@@ -235,12 +235,12 @@ and Object Storage Servers (OSSes) and analysis functions,
 including some visualization interface. These works are similar to our work regarding
 holistic approach in characterization of I/O activities.
 
-In contrast, our work addresses analysis of I/O activities through holistic
-log data analysis of Tofu interconnects and parallel file systems including
-associated I/O nodes.
-The uniqueness of this work is a holistic analysis framework using data transfer status
-on interconnects among I/O nodes and associated I/O activity traces
-at parallel file systems.
+In contrast, our work addresses holistic I/O activity analysis
+through log data analysis of Tofu interconnects and parallel file systems
+including associated I/O nodes.
+The uniqueness of this framework is a holistic analysis approach
+using data transfer status on the Tofu interconnects among I/O nodes
+and associated I/O activity traces at parallel file systems.
 
 \section{K computer and Its File System Monitoring}\label{sec:K_OVERVIEW}
 \label{sec:K_COMP}
@@ -388,7 +388,7 @@ the Tofu~PA information in each ten minute interval:
 It is noted that the cycle counts in the Tofu stats correspond to congestion status
 since unavailability of transfer buffers in packet processing closely corresponds to
 packet transfer congestion.
-We enforced to retrieve those metrics from a TNR at every I/O node
+We conducted to retrieve those metrics from a TNR at every I/O node
 during the K computer operation for about a few months
 until the end of the K computer operation.
 
@@ -472,8 +472,9 @@ from a large amount of log data collected by {\itshape fluentd}.
 Once the framework collects all essential information, its log analysis function
 figures out and gives the following information for the given JOB-ID:
 \begin{itemize}
-\item Maximum waiting time of each interconnect at each used I/O node
+\item Maximum waiting time of each interconnect at each used I/O node ($T_{wait}^{max}$)
 \item Bandwidth utilization ratio of the interconnects relative to the theoretical bandwidth
+($R_{BW}$)
 \item I/O performance in both write and read operations on each used OST
 \end{itemize}
 %
@@ -826,18 +827,24 @@ configurations by using (a) IOR and (b) HPIO}
 %
 
 The original MPI-IO operations with and without two-phase I/O represented by
-"{\tt T:original}" and "{\tt N:original}" show low performance in both read and write
-operations in the IOR runs and the same situation is observed
-for the "{\tt T:original}" case in the HPIO runs.
+"{\tt T:original}" and "{\tt N:original}" show poor performance in both read and write
+operations in the IOR runs.
+The same situation is observed for the "{\tt T:original}" case in the HPIO runs.
 EARTH with full optimization in aggregator layout and I/O request throttling
 and stepwise data aggregation outperformed other cases by setting four requests per step
 ({\tt T:agg=1,rr=1,req=4}) in the IOR runs and eight requests per step
 ({\tt T:agg=1,rr=1,req=8}) in the HPIO runs.
 However, performance was degraded by changing the number of requests per step
 or deactivating aggregator layout optimization.
+In addition, the EARTH case using only I/O throttling without two-phase I/O
+({\tt N:agg=0,rr=0,req=4}) could not improve I/O performance
+compared to the original case ({\tt N:original}) in the IOR runs.
+
 Although we have learned optimization effects through such empirical benchmark runs,
 it has not been clear about the performance impact of the optimization configuration
-on I/O nodes and the LFS.
+on I/O nodes, Tofu links among I/O nodes, and the LFS.
+We report such examinations using the proposed framework in the following
+subsections.
 
 \subsection{Analysis of OSS stats}
 
@@ -847,23 +854,27 @@ during I/O operations at the IOR benchmark run.
 %
 \begin{figure}[htb]
 \centering
-\begin{minipage}[t]{0.88\textwidth}
+\begin{minipage}[t]{0.46\textwidth}
  \centering
- \includegraphics[width=1.0\textwidth]{IOR-ost_io_stats-qdepth-ext-dual.png}
- \subcaption{{\tt req\_qdepth} (Left: Overall, Right: Zoomed less than or equal to 600 entries)}
+ %%\includegraphics[width=1.0\textwidth]{IOR-ost_io_stats-qdepth-ext-dual.png}
+ %%\subcaption{{\tt req\_qdepth} (Left: Overall, Right: Zoomed less than or equal to 600 entries)}
+ \includegraphics[width=0.96\textwidth]{IOR-ost_io_stats-qdepth-ext.png}
+ \subcaption{{\tt req\_qdepth}: The vertical axis is expanded from 600 to 3,500}
  \label{fig:IOR_req_qdepth}
 \end{minipage}
 %
-\noindent
-\begin{minipage}[t]{0.88\textwidth}
+%\noindent
+\begin{minipage}[t]{0.46\textwidth}
  \centering
- \includegraphics[width=1.0\textwidth]{IOR-ost_io_stats-waittime-ext-dual.png}
- \subcaption{{\tt req\_waittime} (Left: Overall, Right: Zoomed less than or equal to 800\,ms)}
+ %%\includegraphics[width=1.0\textwidth]{IOR-ost_io_stats-waittime-ext-dual.png}
+ %%\subcaption{{\tt req\_waittime} (Left: Overall, Right: Zoomed less than or equal to 800\,ms)}
+ \includegraphics[width=0.96\textwidth]{IOR-ost_io_stats-waittime-ext.png}
+ \subcaption{{\tt req\_waittime}: The vertical axis is expanded from 800\,ms to 16\,s}
  \label{fig:IOR_req_waittime}
 \end{minipage}
 %
 \noindent
-\begin{minipage}[t]{0.4\textwidth}
+\begin{minipage}[t]{0.44\textwidth}
  \centering
  \includegraphics[width=1.0\textwidth]{IOR-ost_io_stats-active-ext.png}
  \subcaption{{\tt req\_active}}
@@ -871,20 +882,25 @@ during I/O operations at the IOR benchmark run.
 \end{minipage}
 %
 \caption{Mean stats values obtained from OSSes using our analysis framework
-during the IOR benchmark run}
+during the IOR benchmark run, where numbers represent very small values}
 \label{fig:IOR_OST_IO_STATS}
 \end{figure}
 %
-The original case had the largest number of requests in a request queue
-as shown in Fig.~\ref{fig:IOR_req_qdepth}.
-Fig.~\ref{fig:IOR_req_waittime}
-tells that this case also took the longest time to proceed requests.
+As shown in Fig.~\ref{fig:IOR_req_qdepth}, the two original cases
+with or without two-phase I/O, {\tt T:original} and {\tt N:original}
+had the largest number of requests in a request queue
+in each I/O operations with or without two-phase I/O.
+Fig.~\ref{fig:IOR_req_waittime} tells that those cases also took
+the longest time to proceed requests
+in each I/O operations with or without two-phase I/O.
 Besides, Fig.~\ref{fig:IOR_req_active} shows
-the highest number of I/O threads in the original case.
+the highest number of I/O threads in the original case
+with two-phase I/O.
 Note that the maximum number of threads at each OSS of the LFS was 32
 at the K computer.
-Through the observed results, it has turned out that the original case was not
-suited for I/O request processing at OSSes.
+Through the observed results, it has turned out that the two original cases,
+{\tt T:original} and {\tt N:original}, were not suited for
+I/O request processing at OSSes.
 
 While the EARTH use case with good I/O performance ({\tt T:agg=1,rr=1,req=4})
 showed quite a small number of requests in the queue as shown in
@@ -923,7 +939,7 @@ in the HPIO benchmark run.
 \end{minipage}
 %
 \caption{Mean stats values obtained from OSSes using our analysis framework
-during the HPIO benchmark run}
+during the HPIO benchmark run, where numbers represent very small values}
 \label{fig:HPIO_OST_IO_STATS}
 \end{figure}
 %
@@ -937,12 +953,12 @@ Figure~\ref{fig:IOR_ION_TOFU_BWU_WAIT_TIME} shows mean values of
 (a) the peak bandwidth utilization ratios and
 (b) the maximum waiting times in data transfers on links of used I/O nodes.
 %
-\begin{figure}[htb]
+\begin{figure}[tb]
 \centering
 \begin{minipage}[t]{0.48\textwidth}
  \centering
  \includegraphics[width=1.0\textwidth]{IOR-bwu-IO-nodes-ext.png}
- \subcaption{Bandwidth utilization}
+ \subcaption{$R_{BW}$}
  \label{fig:IOR_ION_TOFU_BW_UTIL}
 \end{minipage}
 %
@@ -950,12 +966,12 @@ Figure~\ref{fig:IOR_ION_TOFU_BWU_WAIT_TIME} shows mean values of
 \begin{minipage}[t]{0.48\textwidth}
  \centering
  \includegraphics[width=1.0\textwidth]{IOR-zero_credit_sec-IO-nodes-ext.png}
- \subcaption{Waiting time in data transfer}
+ \subcaption{$T_{wait}^{max}$}
  \label{fig:IOR_ION_TOFU_WAIT_TIME}
 \end{minipage}
 \caption{
-Mean values for data transfers on the Tofu interconnects among used I/O nodes
-during the IOR benchmark run}
+Mean values for (a) $R_{BW}$ and (b) $T_{wait}^{max}$ on the Tofu interconnects
+among used I/O nodes during the IOR benchmark run}
 \label{fig:IOR_ION_TOFU_BWU_WAIT_TIME}
 \end{figure}
 %
@@ -965,6 +981,9 @@ Fig.~\ref{fig:IOR_ION_TOFU_BW_UTIL},
 the original MPI-IO case shows the lowest utilization, while the full set of EARTH 
 optimizations such as “{\tt T:agg=1,rr=1,req=4}” lead to higher bandwidth utilization
 relative to other cases.
+While the cases without two-phase I/O,
+"{\tt N:original}" and "{\tt N:agg=0,rr=0,req=4}", show
+larger number of requests in queue, especially in write operations.
 By considering effectiveness in data transfers among I/O nodes via Tofu interconnects,
 a higher utilization is preferable.
 In this context, the above optimized case was suitable for I/O optimization.
@@ -983,12 +1002,12 @@ In a similar way, Fig.~\ref{fig:HPIO_ION_TOFU_BWU_WAIT_TIME} shows
 bandwidth utilization ratios and waiting times in data transfers
 on Tofu links of used I/O nodes at the HPIO benchmark run.
 %
-\begin{figure}[htb]
+\begin{figure}[tb]
 \centering
 \begin{minipage}[t]{0.48\textwidth}
  \centering
  \includegraphics[width=0.98\textwidth]{hpio-bwu-IO-nodes-ext.png}
- \subcaption{Bandwidth utilization}
+ \subcaption{$R_{BW}$}
  \label{fig:HPIO_ION_TOFU_BW_UTIL}
 \end{minipage}
 %
@@ -996,12 +1015,11 @@ on Tofu links of used I/O nodes at the HPIO benchmark run.
 \begin{minipage}[t]{0.48\textwidth}
  \centering
  \includegraphics[width=0.98\textwidth]{hpio-zero_credit_sec-IO-nodes-ext.png}
- \subcaption{Waiting time in data transfer}
+ \subcaption{$T_{wait}^{max}$}
  \label{fig:HPIO_ION_TOFU_WAIT_TIME}
 \end{minipage}
-\caption{
-Mean values for data transfers on the Tofu interconnects among used I/O nodes
-during the HPIO benchmark run}
+\caption{Mean values for (a) $R_{BW}$ and (b) $T_{wait}^{max}$ on the Tofu interconnects
+among used I/O nodes during the HPIO benchmark run}
 \label{fig:HPIO_ION_TOFU_BWU_WAIT_TIME}
 \end{figure}
 %
@@ -1017,7 +1035,7 @@ Fig.~\ref{fig:HPIO_ION_TOFU_WAIT_TIME}.
 Figure~\ref{fig:IOR_OST_BW_HMAP_WR} shows write bandwidth heat-maps
 among the 192 OSTs during the IOR benchmark runs.
 %
-\begin{figure}[htb]
+\begin{figure}[tb]
 %% \centering
 \begin{minipage}[t]{0.06\textwidth}
  \includegraphics[width=0.98\textwidth,height=0.14\textheight]{hmap-colorbar-mod2.png}
@@ -1047,6 +1065,20 @@ among the 192 OSTs during the IOR benchmark runs.
  \label{fig:IOR_OST_WR_AGG1_RR1_REQ4}
 \end{minipage}
 %
+\begin{minipage}[t]{0.3\textwidth}
+ \centering
+ \includegraphics[width=0.98\textwidth]{IOR-OST_bw_hmap-Non_TP-orig-write-mod.png}
+ \subcaption{{\tt N:original}}
+ \label{fig:IOR_OST_WR_NTP_ORIG}
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\textwidth}
+ \centering
+ \includegraphics[width=0.98\textwidth]{IOR-OST_bw_hmap-Non_TP-earth-agg0-rr0-req4-write-mod.png}
+ \subcaption{{\tt N:agg=0,rr=0,req=4}}
+ \label{fig:IOR_OST_WR_NTP_AGG0_RR0_REQ4}
+\end{minipage}
+%
 \caption{Write bandwidth heat-maps for 192 OSTs during the IOR benchmark run}
 \label{fig:IOR_OST_BW_HMAP_WR}
 \end{figure}
@@ -1070,10 +1102,20 @@ shows a well-balanced situation in write throughput among OSTs.
 In the context of parallel I/O characteristics, this case was suitable
 to achieve I/O performance for the benchmark run.
 
+On the other hand, collective write operations 
+in the original and the EARTH cases without two-phase I/O
+shown in Figs.~\ref{fig:IOR_OST_WR_NTP_ORIG} and
+\ref{fig:IOR_OST_WR_NTP_AGG0_RR0_REQ4} showed
+poor I/O throughput.
+These poor performance was due to contention on I/O task assignment
+to I/O threads by concurrent I/O accesses of all 12,288 processes
+as we have seen in Figs.~\ref{fig:IOR_req_qdepth}
+and \ref{fig:IOR_req_waittime}.
+
 Figure~\ref{fig:IOR_OST_BW_HMAP_RD} shows read bandwidth heat-maps
 among the 192 OSTs at the IOR benchmark runs.
 %
-\begin{figure}[htb]
+\begin{figure}[tb]
 \begin{minipage}[t]{0.06\textwidth}
  \includegraphics[width=0.98\textwidth,height=0.14\textheight]{hmap-colorbar-mod2.png}
 \end{minipage}
@@ -1100,6 +1142,20 @@ among the 192 OSTs at the IOR benchmark runs.
  \includegraphics[width=0.98\textwidth]{IOR-OST_bw_hmap-TP-earth-agg1-rr1-req4-read-mod.png}
  \subcaption{{\tt T:agg=1,rr=1,req=4}}
  \label{fig:IOR_OST_RD_AGG1_RR1_REQ4}
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\textwidth}
+ \centering
+ \includegraphics[width=0.98\textwidth]{IOR-OST_bw_hmap-Non_TP-orig-read-mod.png}
+ \subcaption{{\tt N:original}}
+ \label{fig:IOR_OST_RD_NTP_ORIG}
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\textwidth}
+ \centering
+ \includegraphics[width=0.98\textwidth]{IOR-OST_bw_hmap-Non_TP-earth-agg0-rr0-req4-read-mod.png}
+ \subcaption{{\tt N:agg=0,rr=0,req=4}}
+ \label{fig:IOR_OST_RD_NTP_AGG0_RR0_REQ4}
 \end{minipage}
 %
 \caption{Read bandwidth heat-maps for 192 OSTs during the IOR benchmark run}
@@ -1191,6 +1247,84 @@ However, the insufficient configuration case has performed the longest waiting t
 in the Tofu interconnects among the used I/O nodes as shown in
 Fig.~\ref{fig:HPIO_ION_TOFU_WAIT_TIME}
 and thus high I/O bandwidth could not be achieved in this configuration.
+
+\subsection{Overall evaluation}
+\label{ssec:overall_eval}
+
+We have conducted the overall evaluation based on the evaluated results
+in each target metric.
+From the results in write and read operations in each benchmark run,
+we have obtained mean values of the following metrics;
+%
+\begin{itemize}
+\item Three metrics of {\tt I/O stats}: ({\tt req\_qdepth}, {\tt req\_waittime}, and {\tt req\_active})
+\item Two metrics of {\tt Tofu stats}: ($R_{BW}$ and $T_{wait}^{max}$)
+\item Mean OST bandwidth obtained from write and read OST throughput values
+measured in {\tt I/O rates} 
+\end{itemize}
+%
+We gave them ranks from 1 in the order from the best one
+among the evaluated optimizations.
+Finally we have obtained a stats score as a mean value of the ranks.
+
+Table~\ref{tbl:IOR_OVERALL_EVAL} summarizes the scores of the IOR benchmark run.
+%
+\begin{table}[tb]
+\caption{Scores of the IOR benchmark run, where lesser is better in each score number}
+\centering
+\begin{tabular}{lccccccc}
+\hline
+\multicolumn{1}{c}{Optimization}  & \multicolumn{3}{c}{I/O stats} & \multicolumn{2}{c}{Tofu stats} & Mean OST & Overall \\
+\multicolumn{1}{c}{configuration} & {\tt req\_qdepth} & {\tt req\_waittime} & {\tt req\_active} &  $R_{BW}$ & $T_{wait}^{max}$ & bandwidth & score \\
+\hline
+T:original          & 7 & 7 & 1 & 7 & 2 & 5 & 4.83 \\
+T:agg=0,rr=0,req=0  & 5 & 4 & 4 & 6 & 7 & 1 & 4.50 \\
+T:agg=0,rr=0,req=4  & 1 & 1 & 8 & 4 & 8 & 7 & 4.83 \\
+T:agg=1,rr=0,req=4  & 2 & 2 & 5 & 2 & 5 & 6 & 3.67 \\
+T:agg=1,rr=1,req=4  & 3 & 3 & 3 & 1 & 6 & 4 & 3.33 \\
+T:agg=1,rr=1,req=16 & 6 & 5 & 2 & 3 & 4 & 2 & 3.67 \\
+N:original          & 8 & 8 & 6 & 8 & 1 & 8 & 6.50 \\
+N:agg=0,rr=0,req=4  & 4 & 6 & 7 & 5 & 3 & 3 & 4.67 \\
+\hline
+\end{tabular}
+\label{tbl:IOR_OVERALL_EVAL}
+\end{table}
+%
+We can see that the case of {\tt T:agg=1,rr=1,req=4} shows the best overall score
+of 3.33 among the evaluated optimization parameter sets.
+Although we have already examined that this case was the best in the IOR run,
+we have observed that the base case has achieved such balanced situation
+among I/O subsystems from the score.
+%% The best score was achieved because of the balanced scores
+%% in the evaluated six metrics.
+
+While the scores of the HPIO benchmark run are summarized in
+Table~\ref{tbl:HPIO_OVERALL_EVAL}.
+%
+\begin{table}[tb]
+\caption{Scores of the HPIO benchmark run, where lesser is better in each score number}
+\centering
+\begin{tabular}{lccccccc}
+\hline
+\multicolumn{1}{c}{Optimization}  & \multicolumn{3}{c}{I/O stats} & \multicolumn{2}{c}{Tofu stats} & Mean OST & Overall \\
+\multicolumn{1}{c}{configuration} & {\tt req\_qdepth} & {\tt req\_waittime} & {\tt req\_active} &  $R_{BW}$ & $T_{wait}^{max}$ & bandwidth & score \\
+\hline
+T:original         & 5 & 6 & 2 & 5 & 1 & 5 & 4.00 \\
+T:agg=0,rr=0,req=0 & 4 & 5 & 4 & 4 & 2 & 6 & 4.17 \\
+T:agg=0,rr=0,req=8 & 1 & 1 & 6 & 2 & 6 & 1 & 2.83 \\
+T:agg=1,rr=1,req=8 & 3 & 4 & 1 & 1 & 4 & 3 & 2.67 \\
+T:agg=1,rr=1,req=2 & 2 & 2 & 5 & 3 & 3 & 4 & 3.17 \\
+T:agg=1,rr=1,req=4 & 6 & 3 & 3 & 6 & 5 & 2 & 4.17 \\
+\hline
+\end{tabular}
+\label{tbl:HPIO_OVERALL_EVAL}
+\end{table}
+%
+From this table, we can see that the case of {\tt T:agg=1,rr=1,req=8}
+has achieved the best score of 2.67 among the evaluated optimiation parameter set.
+The best case shows balanced situation among the I/O subsystems
+as well as the IOR benchmark run.
+We can easily understand the balanced situation using the scoring scheme.
 
 \section{Conclusions}
 \label{sec:CONCLUSIONS}

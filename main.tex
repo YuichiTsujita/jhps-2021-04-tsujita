@@ -154,7 +154,7 @@ compute-node information table, and analysis function.
 Given a unique ID for each job (JOB-ID), the analysis function of the framework
 provides us data such as averaged values of essential I/O activities on used OSSes,
 bandwidth utilization of Tofu interconnects on I/O nodes, and heat-maps about
-I/O performance of used OSTs from the log data with the help of the JOB-DB.
+I/O throughput of used OSTs from the log data with the help of the JOB-DB.
 In this paper, we show how such analyzed data can be used for further
 performance improvements by examining I/O bottlenecks or unbalanced situations
 in I/O workload among I/O nodes in our enhancements in collective MPI-IO implementations
@@ -356,7 +356,8 @@ for the LFS.
 % It is noted that an I/O path from each compute node is automatically routed to an I/O node
 % on the same Z-link, then routed to a target OSS on an LIO.
 
-The proposed analysis framework utilizes the following log data from a large amount of collected information by {\itshape fluentd}.
+The proposed analysis framework utilizes the following three log data collections
+from a large amount of collected information by {\itshape fluentd}.
 %
 \begin{itemize}
 \item {\tt Tofu stats}: Data transfer status metrics of I/O nodes on each Tofu interconnect link
@@ -377,17 +378,17 @@ a huge size of recorded information on the log-collection server
 from other high-priority components of the K computer for a long time.
 
 The {\tt Tofu stats} consist of the following packet processing metrics
-of the ten links, which are obtained from a TNR of each I/O node through
-the Tofu~PA information in each ten minute interval:
+of the ten Tofu links, which are obtained from a TNR of each I/O node
+through the Tofu~PA information in each ten minute interval:
 %
 \begin{itemize}
 \item Cycle counts until target transfer buffer was available in packet transfers
 \item Amount of transferred data size
 \end{itemize}
 %
-It is noted that the cycle counts in the Tofu stats correspond to congestion status
-since unavailability of transfer buffers in packet processing closely corresponds to
-packet transfer congestion.
+It is noted that the cycle counts in the {\tt Tofu stats} correspond to
+congestion status since unavailability of transfer buffers in packet processing
+closely corresponds to packet transfer congestion.
 We conducted to retrieve those metrics from a TNR at every I/O node
 during the K computer operation for about a few months
 until the end of the K computer operation.
@@ -403,10 +404,11 @@ Such a situation is not suitable for effective I/O operations.
 {\tt req\_active} indicates the number of active threads for I/O operations.
 High numbers in only {\tt req\_active} indicate a very good condition
 in terms of I/O accesses.
+
 The {\tt I/O rates} give us I/O throughput status at each OST over time.
-Collected I/O throughput information is expected to show I/O behavior
-that happened on each OST, which OST is active or not or how much I/O bandwidth
-achieved in each OST, for instance.
+Collected I/O throughput information tells us I/O behavior on each OST
+such as how much I/O bandwidth achieved in each OST or
+how about I/O load balancing is for instance.
 Due to the reasons described above, we have examined I/O activities
 in the two I/O benchmark runs at ten minute intervals as trial,
 where each I/O benchmark run took around ten minutes
@@ -435,17 +437,18 @@ from the JOB-DB by specifying a JOB-ID.
 \label{sec:ANAL_SYS}
 
 As described in Sec.~\ref{ssec:LOG_COLL_MON} and Sec.~\ref{ssec:JOB_DB},
-we have monitoring and log collection environment in each component
+we had monitoring and log collection environment for each component
 in the K computer operation.
 However, there was not any environment to have holistic I/O activity analysis
 for the purpose of investigation and performance tuning.
 Considering the complexity in I/O subsystems and I/O software stacks
-in recent HPC systems such as the K computer,
+in a large scale of HPC systems such as the K computer,
 we have built an analysis framework in cooperation with
 the existing monitoring components described in
 Sec.~\ref{ssec:LOG_COLL_MON} and Sec.~\ref{ssec:JOB_DB}.
 Since the framework needs to work together with several components
-such as the JOB-DB built on a PostgreSQL database and log data collected by {\itshape fluentd},
+such as the JOB-DB built on a PostgreSQL database and log data
+collected by {\itshape fluentd},
 we have conducted to build the framework using {\itshape Python}.
 Figure~\ref{fig:LOG_ANAL_SYS} depicts an overview of the implemented analysis framework,
 which is connected with associated log data collected by {\itshape fluentd}
@@ -473,31 +476,40 @@ Once the framework collects all essential information, its log analysis function
 figures out and gives the following information for the given JOB-ID:
 \begin{itemize}
 \item Maximum waiting time of each interconnect at each used I/O node ($T_{wait}^{max}$)
-\item Bandwidth utilization ratio of the interconnects relative to the theoretical bandwidth
-($R_{BW}$)
-\item I/O performance in both write and read operations on each used OST
+from {\tt Tofu stats} log collection
+\item Peak bandwidth utilization ratio of the interconnects relative to
+the theoretical bandwidth during job execution ($R_{BW}$)
+from {\tt Tofu stats} log collection
+\item I/O throughput in both write and read operations on each used OST
+from {\tt IO rates} log collection
 \end{itemize}
 %
 The former two performance values are calculated by using the packet transfer metrics
-obtained from the TNR of used Tofu links.
+obtained from the TNR of used Tofu links, which are obtained from
+{\tt Tofu stats} log colection.
 The function converts the cycle counts obtained from the TNR
-into time values in the unit of second for the maximum waiting times.
-While the bandwidth utilization ratio during the job running is obtained by
-dividing the peak bandwidth of the job by the theoretical bandwidth.
-The peak bandwidth is obtained from throughput values collected
-in an elapsed time of the specified job.
-In the proposed framework, we use the maximum bandwidth utilization
+into time values in the unit of second for the $T_{wait}^{max}$.
+While the $R_{BW}$ is obtained by dividing the peak bandwidth
+in Tofu links of the job with the theoretical bandwidth.
+Note that the peak bandwidth is obtained by dividing transferred packet size
+with elapsed time of the specified job.
+In the proposed framework, we use the $R_{BW}$
 to examine effectiveness in packet transfer associated with I/O operations.
 
 While the I/O performance values were obtained by dividing an amount of data size
-in read and write operations by a monitoring
-interval time (600 seconds in the current configuration) in order to know
-I/O throughput at each used OST.
+in read and write operations with a monitoring interval time
+(600 seconds in the current configuration) in each snapshot
+in order to know I/O throughput at each used OST.
 Once the analysis function is executed, data are stored in the CSV format
 and associated heat-map image data are stored in the PNG format.
 
 \section{Enhanced MPI-IO Implementation: EARTH on K}
 \label{sec:EARTH}
+
+In order to examine effectiveness of the proposed framework,
+we have conducted to evaluate MPI-IO benchmark runs.
+In this context, we have picked up our enhanced MPI-IO implementations
+in addition to the original MPI-IO implementation at the K computer.
 
 MPI-IO is an I/O interface including parallel I/O in the MPI standard~\cite{mpi-forum:web}.
 An MPI library for the K computer supports MPI-IO functions for the FEFS
@@ -649,7 +661,7 @@ Figure~\ref{fig:AGG_RR_LAYOUT} depicts examples of blocked and round-robin
 aggregator layouts, where we have eight aggregators from 16 processes
 deployed among four compute nodes in a blocked layout.
 %
-\begin{figure}[htb]
+\begin{figure}[tb]
 \centering
 \begin{minipage}[t]{0.36\textwidth}
 \centering
@@ -804,7 +816,7 @@ it was difficult to do in a limited machine time.
 Figure~\ref{fig:IOR_HPIO_PERF} shows averaged I/O throughput values
 with standard deviations for the IOR and HPIO benchmarks. 
 %
-\begin{figure}[htb]
+\begin{figure}[tb]
 \centering
 \begin{minipage}[t]{0.46\textwidth}
  \centering
@@ -852,7 +864,7 @@ Figure~\ref{fig:IOR_OST_IO_STATS} shows the mean values of
 {\tt req\_qdepth}, {\tt req\_waittime}, and {\tt req\_active} obtained from OSSes
 during I/O operations at the IOR benchmark run.
 %
-\begin{figure}[htb]
+\begin{figure}[tb]
 \centering
 \begin{minipage}[t]{0.46\textwidth}
  \centering
@@ -913,7 +925,7 @@ tells us a high number of I/O threads was active for this case.
 Figure~\ref{fig:HPIO_OST_IO_STATS} shows the same statistics obtained
 in the HPIO benchmark run.
 %
-\begin{figure}[htb]
+\begin{figure}[tb]
 \centering
 \begin{minipage}[t]{0.44\textwidth}
  \centering
@@ -950,8 +962,7 @@ indicated by "{\tt T:agg=1,rr=1,req=8}."
 \subsection{Bandwidth utilization and waiting times in data transfers on Tofu interconnects of I/O nodes}
 
 Figure~\ref{fig:IOR_ION_TOFU_BWU_WAIT_TIME} shows mean values of
-(a) the peak bandwidth utilization ratios and
-(b) the maximum waiting times in data transfers on links of used I/O nodes.
+(a) $R_{BW}$ and (b) $T_{wait}^{max}$ on Tofu links of used I/O nodes.
 %
 \begin{figure}[tb]
 \centering
@@ -1032,7 +1043,8 @@ Fig.~\ref{fig:HPIO_ION_TOFU_WAIT_TIME}.
 
 \subsection{Load balancing in I/O throughput at OSTs}
 
-Figure~\ref{fig:IOR_OST_BW_HMAP_WR} shows write bandwidth heat-maps
+Figure~\ref{fig:IOR_OST_BW_HMAP_WR} shows write throughput heat-maps
+ranging from 0 to 160\,MiB/s
 among the 192 OSTs during the IOR benchmark runs.
 %
 \begin{figure}[tb]
@@ -1079,14 +1091,16 @@ among the 192 OSTs during the IOR benchmark runs.
  \label{fig:IOR_OST_WR_NTP_AGG0_RR0_REQ4}
 \end{minipage}
 %
-\caption{Write bandwidth heat-maps for 192 OSTs during the IOR benchmark run}
+\caption{Write throughput heat-maps ranging from 0 to 160\,MiB/s
+about the used 192 OSTs during the IOR benchmark run}
 \label{fig:IOR_OST_BW_HMAP_WR}
 \end{figure}
 %
-Each heat-map showed write bandwidth of each OST ranging from 0 to 160 MiB/s,
-where horizontal and vertical directions indicate subjected relative 2D positions
-of used OSTs from the logical 3D layout of the K computer,
-ranging from 0 to 15 and from 0 to 11 in horizontal and vertical directions, respectively.
+% Each heat-map showed write throughput of each OST ranging from 0 to 160\,MiB/s,
+% where
+Horizontal and vertical directions ranging from 0 to 15 and from 0 to 11,
+respectively in each heat-map indicate subjected relative 2D positions
+of used OSTs from the logical 3D layout of the K computer.
 
 In the original MPI-IO case in Fig.~\ref{fig:IOR_OST_WR_ORIG},
 we can see performance gaps among the left and right sides separated by
@@ -1112,8 +1126,8 @@ to I/O threads by concurrent I/O accesses of all 12,288 processes
 as we have seen in Figs.~\ref{fig:IOR_req_qdepth}
 and \ref{fig:IOR_req_waittime}.
 
-Figure~\ref{fig:IOR_OST_BW_HMAP_RD} shows read bandwidth heat-maps
-among the 192 OSTs at the IOR benchmark runs.
+Figure~\ref{fig:IOR_OST_BW_HMAP_RD} shows read throughput heat-maps
+ranging from 0 to 160\,MiB/s among the 192 OSTs at the IOR benchmark runs.
 %
 \begin{figure}[tb]
 \begin{minipage}[t]{0.06\textwidth}
@@ -1158,7 +1172,8 @@ among the 192 OSTs at the IOR benchmark runs.
  \label{fig:IOR_OST_RD_NTP_AGG0_RR0_REQ4}
 \end{minipage}
 %
-\caption{Read bandwidth heat-maps for 192 OSTs during the IOR benchmark run}
+\caption{Read throughput heat-maps ranging from 0 to 160\,MiB/s
+about the used 192 OSTs during the IOR benchmark run}
 \label{fig:IOR_OST_BW_HMAP_RD}
 \end{figure}
 %
@@ -1171,7 +1186,8 @@ with a good optimization configuration as shown in
 Fig.~\ref{fig:IOR_OST_RD_AGG1_RR1_REQ4},
 which has led to high performance in collective I/O.
 
-Write and read bandwidth heat-maps at the HPIO run are also shown in
+Write and read throughput heat-maps ranging from 0 to 160\,MiB/s
+at the HPIO run are also shown in
 Figures~\ref{fig:HPIO_OST_BW_HMAP_WR}
 and \ref{fig:HPIO_OST_BW_HMAP_RD}, respectively.
 %
@@ -1201,7 +1217,8 @@ and \ref{fig:HPIO_OST_BW_HMAP_RD}, respectively.
  \subcaption{{\tt T:agg=1,rr=1,req=8}}
 \end{minipage}
 %
-\caption{Write bandwidth heat-maps of used 192 OSTs at the HPIO benchmark run}
+\caption{Write throughput heat-maps ranging from 0 to 160\,MiB/s about
+the used 192 OSTs at the HPIO benchmark run}
 \label{fig:HPIO_OST_BW_HMAP_WR}
 \end{figure}
 %
@@ -1231,7 +1248,8 @@ and \ref{fig:HPIO_OST_BW_HMAP_RD}, respectively.
  \subcaption{{\tt T:agg=1,rr=1,req=8}}
 \end{minipage}
 %
-\caption{Read bandwidth heat-maps of used 192 OSTs at the HPIO benchmark run}
+\caption{Read throughput heat-maps ranging from 0 to 160\,MiB/s about
+the used 192 OSTs at the HPIO benchmark run}
 \label{fig:HPIO_OST_BW_HMAP_RD}
 \end{figure}
 %
@@ -1239,7 +1257,7 @@ In Fig.~\ref{fig:HPIO_OST_BW_HMAP_RD}, the EARTH case with insufficient configur
 ({\tt T:agg=0,rr=0,req=8}) showed lower performance compared with the original MPI-IO case.
 Meanwhile, a full set of the three optimizations in the EARTH case
 ({\tt T:agg=1,rr=1,req=8}) achieved the highest I/O throughput at every used OST. 
-Read bandwidth heatmaps in Fig.~\ref{fig:HPIO_OST_BW_HMAP_RD} show
+Read throughput heat-maps in Fig.~\ref{fig:HPIO_OST_BW_HMAP_RD} show
 the highest I/O throughput in the insufficient optimization configuration
 ({\tt T:agg=0,rr=0,req=8}), followed by the original MPI-IO case
 and the full optimization configuration case.
@@ -1257,14 +1275,22 @@ From the results in write and read operations in each benchmark run,
 we have obtained mean values of the following metrics;
 %
 \begin{itemize}
-\item Three metrics of {\tt I/O stats}: ({\tt req\_qdepth}, {\tt req\_waittime}, and {\tt req\_active})
+\item Three metrics of {\tt I/O stats}:
+({\tt req\_qdepth}, {\tt req\_waittime}, and {\tt req\_active})
 \item Two metrics of {\tt Tofu stats}: ($R_{BW}$ and $T_{wait}^{max}$)
-\item Mean OST bandwidth obtained from write and read OST throughput values
-measured in {\tt I/O rates} 
+\item Mean OST I/O bandwidth from {\tt I/O rates} ($OST_{mean}$)
 \end{itemize}
 %
+It is preferable to have lower values in the two of the three metrics
+in {\tt I/O stats}, {\tt req\_qdepth} and {\tt req\_waittime}.
+While having higher value is better in the {\tt req\_active}.
+Concerning the two metris in the {\tt Tofu stats},
+higher value is desirable in $R_{BW}$, while lower value is
+suitable in $T_{wait}^{max}$.
+Higher value is prefereable in the last metric in {\tt I/O rates}.
 We gave them ranks from 1 in the order from the best one
-among the evaluated optimizations.
+among the evaluated optimizations in each metric according to
+the above context.
 Finally we have obtained a stats score as a mean value of the ranks.
 
 Table~\ref{tbl:IOR_OVERALL_EVAL} summarizes the scores of the IOR benchmark run.
@@ -1274,8 +1300,8 @@ Table~\ref{tbl:IOR_OVERALL_EVAL} summarizes the scores of the IOR benchmark run.
 \centering
 \begin{tabular}{lccccccc}
 \hline
-\multicolumn{1}{c}{Optimization}  & \multicolumn{3}{c}{I/O stats} & \multicolumn{2}{c}{Tofu stats} & Mean OST & Overall \\
-\multicolumn{1}{c}{configuration} & {\tt req\_qdepth} & {\tt req\_waittime} & {\tt req\_active} &  $R_{BW}$ & $T_{wait}^{max}$ & bandwidth & score \\
+\multicolumn{1}{c}{Optimization}  & \multicolumn{3}{c}{{\tt I/O stats}} & \multicolumn{2}{c}{{\tt Tofu stats}} & {\tt I/O rates} & Overall \\
+\multicolumn{1}{c}{configuration} & {\tt req\_qdepth} & {\tt req\_waittime} & {\tt req\_active} &  $R_{BW}$ & $T_{wait}^{max}$ & $OST_{mean}$ & score \\
 \hline
 T:original          & 7 & 7 & 1 & 7 & 2 & 5 & 4.83 \\
 T:agg=0,rr=0,req=0  & 5 & 4 & 4 & 6 & 7 & 1 & 4.50 \\
@@ -1306,8 +1332,8 @@ Table~\ref{tbl:HPIO_OVERALL_EVAL}.
 \centering
 \begin{tabular}{lccccccc}
 \hline
-\multicolumn{1}{c}{Optimization}  & \multicolumn{3}{c}{I/O stats} & \multicolumn{2}{c}{Tofu stats} & Mean OST & Overall \\
-\multicolumn{1}{c}{configuration} & {\tt req\_qdepth} & {\tt req\_waittime} & {\tt req\_active} &  $R_{BW}$ & $T_{wait}^{max}$ & bandwidth & score \\
+\multicolumn{1}{c}{Optimization}  & \multicolumn{3}{c}{{\tt I/O stats}} & \multicolumn{2}{c}{{\tt Tofu stats}} & {\tt I/O rates} & Overall \\
+\multicolumn{1}{c}{configuration} & {\tt req\_qdepth} & {\tt req\_waittime} & {\tt req\_active} &  $R_{BW}$ & $T_{wait}^{max}$ & $OST_{mean}$ & score \\
 \hline
 T:original         & 5 & 6 & 2 & 5 & 1 & 5 & 4.00 \\
 T:agg=0,rr=0,req=0 & 4 & 5 & 4 & 4 & 2 & 6 & 4.17 \\
@@ -1351,7 +1377,16 @@ We had an unknown issue in performance gaps among different optimization configu
 of the EARTH.
 The framework also informed us how much the impact in I/O activities at the LFS
 and bandwidth utilization of the Tofu links of I/O nodes
-among several optimization configurations of the EARTH.
+among several optimization configurations of the EARTH
+not only individual examinations in the three log data collections
+but also overall scoring scheme.
+By using the framework, we have obtained the same answer about the best
+optimization configuration in the two I/O benchmark runs compared with
+the I/O bandwidth values obtained only from benchmark runs.
+Compared with the normal benchmark run, our framework can give
+more information about the I/O activities in each I/O subsystems
+such as high speed interconnects and activities on the target
+file systems.
 
 Our future work is building a similar framework in our next HPC system,
 the supercomputer Fugaku~\cite{fugaku_info:web} with more sophisticated organization

@@ -65,7 +65,7 @@
 \begin{document}
 
 \JHPSissue{0}   % keep 0 until the issue is assigned
-\JHPSkeywords{Holistic log data analysis, K computer, FEFS, Tofu, MPI-IO}
+\JHPSkeywords{Holistic log data analysis, K computer, FEFS, Lustre, Tofu, MPI-IO}
 
   % Author macro takes Name, Institution, Optional Link to the person, Optional Email
 \JHPSauthor{Yuichi Tsujita}{RIKEN Center for Computational Science, Kobe, Japan}{}{yuichi.tsujita@riken.jp}
@@ -136,8 +136,9 @@ is required to optimize I/O operations.
 Without knowing the status of I/O nodes and parallel file systems,
 it is quite difficult to tune I/O operations in HPC applications.
 
-It is expected that the utilization of statistics log data of file system servers and
-interconnects provides quite useful metrics for I/O performance tuning by examining statistics
+It is expected that the utilization of statistics log data of I/O subsystems
+such as file system servers and interconnects provides quite useful metrics
+for I/O performance tuning by examining statistics
 of I/O request operations or data packet transfers through interconnects.
 In this context, we have proposed a framework that monitors data transfers
 on Tofu interconnects on I/O nodes and I/O activities of parallel file systems
@@ -146,35 +147,40 @@ in our workshop paper~\cite{tsujita:hpc_iodc20}.
 To our best knowledge, this is the first work to utilize data transfer information of
 Tofu interconnects on I/O nodes among the HPC systems using Tofu interconnects
 in tuning I/O operations.
-The framework consists of several components: log data collected by
-{\itshape fluentd}~\cite{fluentd:web}, a PostgreSQL database that keeps a large amount
-of executed job information (JOB-DB),
-compute-node information table, and analysis function.
+The framework consists of analysis functions for several components:
+log data collected by {\itshape fluentd}~\cite{fluentd:web},
+a PostgreSQL database that keeps a large amount of executed job information (JOB-DB),
+and information about compute and I/O nodes (node information table).
 
 Given a unique ID for each job (JOB-ID), the analysis function of the framework
 provides us data such as averaged values of essential I/O activities on used OSSes,
 bandwidth utilization of Tofu interconnects on I/O nodes, and heat-maps about
-I/O throughput of used OSTs from the log data with the help of the JOB-DB.
-In this paper, we show how such analyzed data can be used for further
+I/O throughput of used OSTs from the log data with the help of the JOB-DB
+and the node information table.
+In this paper, we demonstrate how such analyzed data can be used for further
 performance improvements by examining I/O bottlenecks or unbalanced situations
-in I/O workload among I/O nodes in our enhancements in collective MPI-IO implementations
-named "EARTH on K"~\cite{tsujita:WS_EuroMPI2014,tsujita:hpcasia18}.
-We have done empirical benchmark evaluations in performance improvements
-for our enhancement work in the K computer.
-Since only the result obtained from the evaluations is I/O performance,
+in I/O workload among I/O nodes in our enhancements in collective MPI-IO
+implementations named ``EARTH on K''~\cite{tsujita:WS_EuroMPI2014,tsujita:hpcasia18}.
+We have already conducted empirical benchmark evaluations
+in performance improvements for our enhancement work in the K computer
+through researches in \cite{tsujita:WS_EuroMPI2014,tsujita:hpcasia18}.
+Since only the result obtained from the benchmark evaluations is I/O performance,
 we had difficulties in tuning the implementation.
 Once we have introduced the framework for the evaluations,
 we have noticed which subsystem is bottleneck during the optimizations.
 
 Compared with our previous paper~\cite{tsujita:hpc_iodc20},
-we have made further analysis by having additional
-optimizations in an enhanced MPI-IO with and without two-phase I/O
-in order to show its usefulness
-in investigating performance advantages achieved by
-the enhanced MPI-IO compared with the original MPI-IO
-through two I/O benchmark runs.
-We have found new explicit differences in metrics which are given by the framework
-in not only write operations but also read operations.
+we have made further analysis for additional optimizations
+in an enhanced MPI-IO with and without two-phase I/O
+in order to show their impact in each underlying I/O subsystems.
+% its usefulness
+% in investigating performance advantages achieved by
+% the enhanced MPI-IO compared with the original MPI-IO
+% through two I/O benchmark runs.
+We have found new explicit differences in metrics which were given
+by the framework in not only write operations but also read operations.
+In addition, we propose scoring scheme in the framework
+so that we can easily find the best optimization candidate.
 
 Rest of this paper is organized as follows.
 In Sec.~\ref{sec:RELATED_WORK}, we discuss the related work.
@@ -182,7 +188,7 @@ A system overview including a file I/O subsystem of the K computer,
 which is an evaluated platform for the proposed framework,
 is explained in Sec.~\ref{sec:K_COMP}.
 In Sec.~\ref{sec:ANAL_SYS}, we present the proposed analysis framework.
-We also explain the "EARTH on K" in Sec.~\ref{sec:EARTH},
+We also explain the ``EARTH on K'' in Sec.~\ref{sec:EARTH},
 where we briefly present its advanced functions relative to the original MPI-IO.
 In Sec.\ref{sec:EVAL}, we demonstrate experimental evaluations
 for the proposed framework at the K computer, and we discuss the usefulness
@@ -198,20 +204,53 @@ These studies showed various characteristics in terms of I/O access patterns per
 by applications on HPC systems using Lustre file systems.
 I/O monitoring at storage system level has been studied
 in \cite{isc14:kunkel,uselton:cug13,madireddy:nas17}.
+A monitoring and analysis framework named SIOX proposed in \cite{isc14:kunkel}
+automatically suggests and applies performance optimizations,
+and it assists locating and diagnosing performance problems.
+Research paper by Uselton and Write~\cite{uselton:cug13} has proposed
+extended monitoring about metrics available from Lustre
+using Lustre Monitoring Tool~\cite{LMT:GitHub}.
+They have proposed a metric named File System Utilization
+using obtained metrics to characterize I/O pattern.
+Madireddy et al.,\cite{madireddy:nas17} have conducted I/O system analysis
+using operation log data, and they have demonstrated I/O characterization
+of each job through correlation between I/O patterns of each job and I/O
+subsystem activities.
+They have also discussed influence of monitoring interval
+in system performance.
 Multi-platform study using system logs of file systems has been reported
 in \cite{luu:HPDC2015}.
+Their cross-platform analysis has showed variety of insights
+about I/O subsystem operation at several HPC systems
+through comparison among the HPC systems
+with the help of Darshan~\cite{darshan:web} to collect I/O behavior.
+Our framework also supports similar functions compared with the above researches.
+However, our case also focuses on behavior of interconnects
+among I/O nodes in the target file system.
 
 Log data collection and analysis for performance tuning have been done in
 server-side analysis~\cite{liu:fast2014,liu:sc16,xu:cug16}.
+Researches by Liu et al., in \cite{liu:fast2014,liu:sc16} have
+proposed a framework to identify I/O activities automatically
+using trace log data from file system servers.
+Xu et al.,\cite{xu:cug16} have proposed their I/O profiling framework
+named LIOProf to track I/O activities of on Lustre file system servers
+including client-side statistics recorded on servers.
+Using those metrics, they have demonstrated optimization effect
+in collective MPI-IO implementation.
+However, they have not focused on behavior of interconnects.
 Detailed study in production runs has been done in \cite{patel:sc19}
 by analyzing server-side log data.
-Even sufficient logging of each server-side component did not provide causal relationships
-between client and server-side activities.
+Even sufficient logging of each server-side component did not provide
+causal relationships between client and server-side activities.
+Our proposed framework supports interconnect monitoring
+in performance bottleneck investigation to tune I/O optimization
+although the framework has not been used in production runs at the K computer.
 
-Interconnects are also one of the key components in HPC systems. Monitoring data transfers of
-interconnects has provided a hot-spot of traffic congestion for instance,
-and such approaches have succeeded in analysis of application activities
-or performance impact associated with
+Interconnects are also one of the key components in HPC systems. Monitoring
+data transfers of interconnects has provided a hot-spot of traffic congestion
+for instance, and such approaches have succeeded in analysis of
+application activities or performance impact associated with
 the traffic condition~\cite{zimmer:cug16,kumar:DSN2018,chunduri:pmbs19}.
 However, it is not sufficient to characterize I/O activities on parallel file systems
 in HPC systems.
@@ -369,13 +408,16 @@ from a large amount of collected information by {\itshape fluentd}.
 %
 Only the {\tt I/O stats} have been collected at one minute intervals,
 while the remainings have been collected at ten minute intervals.
-The ten minute intervals were selected for the I/O related monitoring as trial
+We have selected the ten minute intervals for the I/O related monitoring as trial
 in a conservative manner not to affect I/O node activities for stable production runs
-from our empirical study in the last few months of the K computer operation.
+from our empirical study.
+We have conducted the trial monitoring in the last few months of the K computer operation.
 Limited storage space for the I/O related log-collection is another reason
-in the last few months of the K computer operation since we have already collected
-a huge size of recorded information on the log-collection server
-from other high-priority components of the K computer for a long time.
+for the ten-minutes intervals.
+In the last few months of the K computer operation,
+we have already collected a huge size of recorded information
+on the log-collection server from other high-priority components
+of the K computer for a long time.
 
 The {\tt Tofu stats} consist of the following packet processing metrics
 of the ten Tofu links, which are obtained from a TNR of each I/O node
@@ -400,9 +442,9 @@ Such statistics give the status of I/O requests coming from compute nodes throug
 For instance, a large value in both {\tt req\_qdepth} and {\tt req\_waittime} indicates
 very busy status of OSSes or idle status of OSSes waiting for the next operation
 due to heavy load of an MDS before I/O accesses for instance.
-Such a situation is not suitable for effective I/O operations.
-{\tt req\_active} indicates the number of active threads for I/O operations.
-High numbers in only {\tt req\_active} indicate a very good condition
+Such situation is not suitable for effective I/O operations.
+Since {\tt req\_active} indicates the number of active threads for I/O operations,
+high numbers in {\tt req\_active} indicate a very good condition
 in terms of I/O accesses.
 
 The {\tt I/O rates} give us I/O throughput status at each OST over time.
@@ -527,7 +569,7 @@ for the FEFS to achieve high I/O performance.
 
 The current ROMIO with the improved two-phase I/O for Lustre~\cite{lustre-adio:whpaper-2008}
 has a potential to improve performance on the FEFS.
-An enhanced implementation named "EARTH on K"
+Our enhanced MPI-IO implementation named ``EARTH on K''
 (hereinafter, EARTH) has been developed for the K computer
 based on the improved two-phase I/O with topology-aware performance optimizations
 for collective MPI-IO at the FEFS.
@@ -565,7 +607,7 @@ by suitable aggregator layout.
 Figure~\ref{fig:AGG_STR_AWARE} shows aggregator layouts with and
 without striping awareness in accessing four OSTs by 16 aggregators,
 where numbers in circles represent MPI ranks
-and the numbers ranging from "{\tt i}" to "{\tt iv}" represent
+and the numbers ranging from {\itshape i} to {\itshape iv} represent
 the order of striping accesses.
 %
 \begin{figure}[htb]
@@ -633,6 +675,8 @@ from the younger number group by relaying tokens from an aggregator that finishe
 I/O accesses to a corresponding aggregator in the next group.
 The number of groups can be tuned at runtime through {\tt MPI\_Info\_set()}
 or an environment variable.
+It is also noted that EARTH also supports I/O request throttling
+even if we disable two-phase I/O in collective MPI-IO.
 
 Stepwise data aggregation shown in
 Fig.~\ref{fig:STEP_WISE_AGG}
@@ -681,13 +725,14 @@ utilizing I/O throttling and step-wise data aggregation in write operations}
 \label{fig:AGG_RR_LAYOUT}
 \end{figure}
 %
-Horizontal colored arrows remarked by "R", "A", and "W" represent
+Horizontal colored arrows remarked by {\itshape R}, {\itshape A},
+and {\itshape W} represent
 read, data aggregation, and write phases in two-phase I/O of collective write
 operations, respectively.
 I/O throttling scheme relays tokens among aggregators.
 If we have a blocked aggregator layout as shown in
 Fig.~\ref{fig:BLK_LAYOUT},
-four processes in the two compute nodes ("CN \#0" and "CN \#1")
+four processes in the two compute nodes ({\itshape CN \#0} and {\itshape CN \#1})
 act as aggregators, which are from 0 to 7 in MPI rank.
 As a result, we may have contention inside the same compute node
 to proceed each phase in the two-phase I/O.
@@ -740,14 +785,19 @@ On the one hand, 6,144 processes were chosen to be aggregators in the EARTH case
 in order to examine performance impact of aggregator layout among compute nodes
 according to optimization configuration of the EARTH.
 In this paper, {\tt original} stands for the original MPI-IO,
-while a combination of the three optimization parameters
-({\tt agg}, {\tt rr} and {\tt req}) indicates MPI-IO of the EARTH.
-Concerning the EARTH case, {\tt agg=1} stands for striping-aware aggregator layout
+while a combination of the three optimization parameters,
+{\tt agg}, {\tt rr}, and {\tt req}, indicates MPI-IO of the EARTH.
+Concerning the EARTH use case, {\tt agg=1} stands for striping-aware aggregator layout
 and {\tt rr=1} denotes round-robin aggregator layout among compute nodes.
 A zero value in each case stands for deactivation in the corresponding layout optimization.
-The last parameter req with a number describes the number of I/O requests
+The last parameter {\tt req} with a number describes the number of I/O requests
 going to each OST per step in I/O throttling and stepwise data aggregation
 except that {\tt req=0} denotes deactivation of I/O throttling and stepwise aggregation.
+
+In the IOR benchmark run, we have conducted collective MPI-IO without two-phase I/O.
+In this paper, we describe collective MPI-IO with and without two-phase I/O
+by giving ``T:'' and ``N:'' at the beginning of the parameter configuration notation
+such as {\tt T:original} and {\tt N:original}, respectively.
 
 \subsection{Benchmark configuration}
 
@@ -764,10 +814,10 @@ $ ior -i 5 -a MPIIO -c -U hints_info -k -m -vvv -w -t 256m -b 256m \
     -o ${TARGET_DIR}/test-IOR.dat -d 0.1
 \end{verbatim}
 %
-We executed read operations with the same command changing "-w" by "-r",
+We executed read operations with the same command changing ``-w'' by ``-r'',
 followed by write operations with the above command
 in every optimization parameter configuration.
-"{\tt hints\_info}", is a file describing some hints associated with
+``{\tt hints\_info}'', is a file describing some hints associated with
 I/O operations such as the number of processes per node and so forth.
 %
 % \begin{figure}[tb]
@@ -784,8 +834,8 @@ I/O operations such as the number of processes per node and so forth.
 A target file ({\tt test-IOR.dat}) was generated in the directory
 ({\tt \$\{TARGET\_DIR\}}) with 192 stripe count.
 We carried out collective MPI-IO with and without two-phase I/O by enabling
-or disabling "{\tt romio\_cb\_write}" and "{\tt romio\_cb\_read}"
-through the "{\tt hints\_info}."
+or disabling ``{\tt romio\_cb\_write}'' and ``{\tt romio\_cb\_read}''
+through the ``{\tt hints\_info}.''
 %
 
 \subsubsection{HPIO}
@@ -802,7 +852,7 @@ $ hpio -n 12288 -n 0010 -r 6 -B -s 5992 -c 30729 -p 256 -m 01 -O 11 -f 0 \
   -d ${TARGET_DIR} -w 1
 \end{verbatim}
 %
-Note that the option, "{\tt cb\_config\_list}" was available only for
+Note that the option, ``{\tt cb\_config\_list}'' was available only for
 the EARTH case, and thus all processes worked as aggregators
 in the original case as we explained.
 The target file was generated in the directory {\tt \$\{TARGET\_DIR\}}
@@ -839,9 +889,9 @@ configurations by using (a) IOR and (b) HPIO}
 %
 
 The original MPI-IO operations with and without two-phase I/O represented by
-"{\tt T:original}" and "{\tt N:original}" show poor performance in both read and write
+{\tt T:original} and {\tt N:original} show poor performance in both read and write
 operations in the IOR runs.
-The same situation is observed for the "{\tt T:original}" case in the HPIO runs.
+The same situation is observed for the {\tt T:original} case in the HPIO runs.
 EARTH with full optimization in aggregator layout and I/O request throttling
 and stepwise data aggregation outperformed other cases by setting four requests per step
 ({\tt T:agg=1,rr=1,req=4}) in the IOR runs and eight requests per step
@@ -852,17 +902,21 @@ In addition, the EARTH case using only I/O throttling without two-phase I/O
 ({\tt N:agg=0,rr=0,req=4}) could not improve I/O performance
 compared to the original case ({\tt N:original}) in the IOR runs.
 
-Although we have learned optimization effects through such empirical benchmark runs,
+Although we have learned optimization effects through such empirical benchmark runs
+in our previous research papers~\cite{tsujita:WS_EuroMPI2014,tsujita:hpcasia18},
 it has not been clear about the performance impact of the optimization configuration
 on I/O nodes, Tofu links among I/O nodes, and the LFS.
-We report such examinations using the proposed framework in the following
-subsections.
+We report examinations of each component using the proposed framework
+in the following subsections.
 
-\subsection{Analysis of OSS stats}
+% \subsection{Analysis of OSS stats}
+% \subsection{Analysis of {\tt I/O stats}}
+\subsection{I/O request status at file system servers}
 
 Figure~\ref{fig:IOR_OST_IO_STATS} shows the mean values of
-{\tt req\_qdepth}, {\tt req\_waittime}, and {\tt req\_active} obtained from OSSes
-during I/O operations at the IOR benchmark run.
+{\tt req\_qdepth}, {\tt req\_waittime}, and {\tt req\_active}
+from {\tt I/O stats} log collection during I/O operations
+at the IOR benchmark run.
 %
 \begin{figure}[tb]
 \centering
@@ -955,9 +1009,9 @@ during the HPIO benchmark run, where numbers represent very small values}
 \label{fig:HPIO_OST_IO_STATS}
 \end{figure}
 %
-Similar to the IOR run, the original case was not good compared
-with the EARTH case with good optimization configuration
-indicated by "{\tt T:agg=1,rr=1,req=8}."
+Similar to the IOR run, the original use case was not good compared
+with the EARTH use case with good optimization configuration
+indicated by {\tt T:agg=1,rr=1,req=8}.
 
 \subsection{Bandwidth utilization and waiting times in data transfers on Tofu interconnects of I/O nodes}
 
@@ -986,14 +1040,13 @@ among used I/O nodes during the IOR benchmark run}
 \label{fig:IOR_ION_TOFU_BWU_WAIT_TIME}
 \end{figure}
 %
-
 Concerning bandwidth utilization shown in
 Fig.~\ref{fig:IOR_ION_TOFU_BW_UTIL},
-the original MPI-IO case shows the lowest utilization, while the full set of EARTH 
-optimizations such as “{\tt T:agg=1,rr=1,req=4}” lead to higher bandwidth utilization
+the original MPI-IO use case shows the lowest utilization, while the full set of EARTH 
+optimizations such as {\tt T:agg=1,rr=1,req=4} lead to higher bandwidth utilization
 relative to other cases.
-While the cases without two-phase I/O,
-"{\tt N:original}" and "{\tt N:agg=0,rr=0,req=4}", show
+While the use cases without two-phase I/O,
+{\tt N:original} and {\tt N:agg=0,rr=0,req=4}, show
 larger number of requests in queue, especially in write operations.
 By considering effectiveness in data transfers among I/O nodes via Tofu interconnects,
 a higher utilization is preferable.
@@ -1001,7 +1054,7 @@ In this context, the above optimized case was suitable for I/O optimization.
 
 Fig.~\ref{fig:IOR_ION_TOFU_WAIT_TIME}
 tells us that the enhanced implementation
-without aggregator layout optimization indicated by “{\tt T:agg=0,rr=0,req=4}”
+without aggregator layout optimization indicated by {\tt T:agg=0,rr=0,req=4}
 took the longest times.
 It is also noted that this case also performed the lowest bandwidth utilization
 in write operations as shown in
@@ -1034,12 +1087,11 @@ among used I/O nodes during the HPIO benchmark run}
 \label{fig:HPIO_ION_TOFU_BWU_WAIT_TIME}
 \end{figure}
 %
-The EARTH case with the best configuration ({\tt T:agg=1,rr=1,req=8}) also
+The EARTH use case with the best configuration ({\tt T:agg=1,rr=1,req=8}) also
 outperformed other cases in
 Fig.~\ref{fig:HPIO_ION_TOFU_BW_UTIL}.
-This case also showed shorter times in both read and write operations
-among the EARTH cases in
-Fig.~\ref{fig:HPIO_ION_TOFU_WAIT_TIME}.
+This case also minimized waiting times in both read and write operations
+among the EARTH use cases in Fig.~\ref{fig:HPIO_ION_TOFU_WAIT_TIME}.
 
 \subsection{Load balancing in I/O throughput at OSTs}
 
@@ -1102,7 +1154,7 @@ Horizontal and vertical directions ranging from 0 to 15 and from 0 to 11,
 respectively in each heat-map indicate subjected relative 2D positions
 of used OSTs from the logical 3D layout of the K computer.
 
-In the original MPI-IO case in Fig.~\ref{fig:IOR_OST_WR_ORIG},
+In the original MPI-IO use case in Fig.~\ref{fig:IOR_OST_WR_ORIG},
 we can see performance gaps among the left and right sides separated by
 the dotted line.
 Fig.~\ref{fig:IOR_OST_WR_AGG0_RR0_REQ0}
@@ -1117,14 +1169,14 @@ In the context of parallel I/O characteristics, this case was suitable
 to achieve I/O performance for the benchmark run.
 
 On the other hand, collective write operations 
-in the original and the EARTH cases without two-phase I/O
+in the original and the EARTH use cases without two-phase I/O
 shown in Figs.~\ref{fig:IOR_OST_WR_NTP_ORIG} and
 \ref{fig:IOR_OST_WR_NTP_AGG0_RR0_REQ4} showed
 poor I/O throughput.
 These poor performance was due to contention on I/O task assignment
-to I/O threads by concurrent I/O accesses of all 12,288 processes
-as we have seen in Figs.~\ref{fig:IOR_req_qdepth}
-and \ref{fig:IOR_req_waittime}.
+to I/O threads by huge number of concurrent I/O accesses from
+all 12,288 processes as we have seen in
+Figs.~\ref{fig:IOR_req_qdepth} and \ref{fig:IOR_req_waittime}.
 
 Figure~\ref{fig:IOR_OST_BW_HMAP_RD} shows read throughput heat-maps
 ranging from 0 to 160\,MiB/s among the 192 OSTs at the IOR benchmark runs.
@@ -1177,21 +1229,20 @@ about the used 192 OSTs during the IOR benchmark run}
 \label{fig:IOR_OST_BW_HMAP_RD}
 \end{figure}
 %
-Imbalanced bandwidth situation is observed in the original MPI-IO case shown in
-Fig.~\ref{fig:IOR_OST_RD_ORIG}
-and the EARTH case without optimization shown
+Imbalanced bandwidth situation is observed in the original MPI-IO use case
+shown in Fig.~\ref{fig:IOR_OST_RD_ORIG}
+and the EARTH use case without optimization shown
 in Fig.~\ref{fig:IOR_OST_RD_AGG0_RR0_REQ0}.
-While well-balanced situation has been achieved in the EARTH case
+While well-balanced situation has been achieved in the EARTH use case
 with a good optimization configuration as shown in
 Fig.~\ref{fig:IOR_OST_RD_AGG1_RR1_REQ4},
-which has led to high performance in collective I/O.
+which has led to high performance collective I/O.
 
 Write and read throughput heat-maps ranging from 0 to 160\,MiB/s
 at the HPIO run are also shown in
-Figures~\ref{fig:HPIO_OST_BW_HMAP_WR}
-and \ref{fig:HPIO_OST_BW_HMAP_RD}, respectively.
+Figs.~\ref{fig:HPIO_OST_BW_HMAP_WR} and \ref{fig:HPIO_OST_BW_HMAP_RD}, respectively.
 %
-\begin{figure}[htb]
+\begin{figure}[tb]
 \begin{minipage}[t]{0.06\textwidth}
  \includegraphics[width=0.98\textwidth,height=0.14\textheight]{hmap-colorbar-mod2.png}
 \end{minipage}
@@ -1253,13 +1304,13 @@ the used 192 OSTs at the HPIO benchmark run}
 \label{fig:HPIO_OST_BW_HMAP_RD}
 \end{figure}
 %
-In Fig.~\ref{fig:HPIO_OST_BW_HMAP_RD}, the EARTH case with insufficient configuration
-({\tt T:agg=0,rr=0,req=8}) showed lower performance compared with the original MPI-IO case.
-Meanwhile, a full set of the three optimizations in the EARTH case
+In Fig.~\ref{fig:HPIO_OST_BW_HMAP_RD}, the EARTH use case with insufficient configuration
+({\tt T:agg=0,rr=0,req=8}) showed lower performance compared with the original MPI-IO use case.
+Meanwhile, a full set of the three optimizations in the EARTH use case
 ({\tt T:agg=1,rr=1,req=8}) achieved the highest I/O throughput at every used OST. 
 Read throughput heat-maps in Fig.~\ref{fig:HPIO_OST_BW_HMAP_RD} show
 the highest I/O throughput in the insufficient optimization configuration
-({\tt T:agg=0,rr=0,req=8}), followed by the original MPI-IO case
+({\tt T:agg=0,rr=0,req=8}), followed by the original MPI-IO use case
 and the full optimization configuration case.
 However, the insufficient configuration case has performed the longest waiting time
 in the Tofu interconnects among the used I/O nodes as shown in
@@ -1284,10 +1335,10 @@ we have obtained mean values of the following metrics;
 It is preferable to have lower values in the two of the three metrics
 in {\tt I/O stats}, {\tt req\_qdepth} and {\tt req\_waittime}.
 While having higher value is better in the {\tt req\_active}.
-Concerning the two metris in the {\tt Tofu stats},
+Concerning the two metrics in the {\tt Tofu stats},
 higher value is desirable in $R_{BW}$, while lower value is
 suitable in $T_{wait}^{max}$.
-Higher value is prefereable in the last metric in {\tt I/O rates}.
+Higher value is preferable in $OST_{mean}$ from {\tt I/O rates}.
 We gave them ranks from 1 in the order from the best one
 among the evaluated optimizations in each metric according to
 the above context.
@@ -1319,8 +1370,8 @@ N:agg=0,rr=0,req=4  & 4 & 6 & 7 & 5 & 3 & 3 & 4.67 \\
 We can see that the case of {\tt T:agg=1,rr=1,req=4} shows the best overall score
 of 3.33 among the evaluated optimization parameter sets.
 Although we have already examined that this case was the best in the IOR run,
-we have observed that the base case has achieved such balanced situation
-among I/O subsystems from the score.
+we have observed another insight that the bast case has achieved such balanced
+situation among I/O subsystems from the score.
 %% The best score was achieved because of the balanced scores
 %% in the evaluated six metrics.
 
@@ -1383,8 +1434,8 @@ but also overall scoring scheme.
 By using the framework, we have obtained the same answer about the best
 optimization configuration in the two I/O benchmark runs compared with
 the I/O bandwidth values obtained only from benchmark runs.
-Compared with the normal benchmark run, our framework can give
-more information about the I/O activities in each I/O subsystems
+Compared with traditional evaluation using I/O benchmarks,
+our framework can give more insights about the I/O activities in each I/O subsystems
 such as high speed interconnects and activities on the target
 file systems.
 
@@ -1423,7 +1474,8 @@ Aries~\cite{cray:aries_overview,cray:aries_hardware_counters}
 from Cray also provide the similar hardware counters,
 and they have been used in
 log analysis studies~\cite{chunduri:pmbs19,ahlgren:cug18,zimmer:cug16,pedretti:cug13}.
-Besides, metrics extracted from FEFS are ones available in Lustre.
+Besides, metrics extracted from FEFS are ones available in Lustre
+because FEFS is an enhanced file system based on Lustre.
 Therefore it would be easy to utilize the same metrics in
 other HPC platforms utilizing Lustre file systems.
 In this context, enhancements on other HPC platforms would be

@@ -204,9 +204,9 @@ These studies showed various characteristics in terms of I/O access patterns per
 by applications on HPC systems using Lustre file systems.
 I/O monitoring at storage system level has been studied
 in \cite{isc14:kunkel,uselton:cug13,madireddy:nas17}.
-A monitoring and analysis framework named SIOX proposed in \cite{isc14:kunkel}
-automatically suggests and applies performance optimizations,
-and it assists locating and diagnosing performance problems.
+Kunkel et al.,~\cite{isc14:kunkel} have proposed a monitoring and analysis framework
+to suggests and applies performance optimizations automatically.
+It assists locating and diagnosing performance problems.
 Research paper by Uselton and Write~\cite{uselton:cug13} has proposed
 extended monitoring about metrics available from Lustre
 using Lustre Monitoring Tool~\cite{LMT:GitHub}.
@@ -225,8 +225,8 @@ about I/O subsystem operation at several HPC systems
 through comparison among the HPC systems
 with the help of Darshan~\cite{darshan:web} to collect I/O behavior.
 Our framework also supports similar functions compared with the above researches.
-However, our case also focuses on behavior of interconnects
-among I/O nodes in the target file system.
+Compared with the above researches, our case also focuses on behavior
+of interconnects among I/O nodes in the target file system.
 
 Log data collection and analysis for performance tuning have been done in
 server-side analysis~\cite{liu:fast2014,liu:sc16,xu:cug16}.
@@ -247,13 +247,25 @@ Our proposed framework supports interconnect monitoring
 in performance bottleneck investigation to tune I/O optimization
 although the framework has not been used in production runs at the K computer.
 
-Interconnects are also one of the key components in HPC systems. Monitoring
-data transfers of interconnects has provided a hot-spot of traffic congestion
+Interconnects are also one of the key components in HPC systems.
+Monitoring data transfers of interconnects tells us a hot-spot of traffic congestion
 for instance, and such approaches have succeeded in analysis of
 application activities or performance impact associated with
 the traffic condition~\cite{zimmer:cug16,kumar:DSN2018,chunduri:pmbs19}.
-However, it is not sufficient to characterize I/O activities on parallel file systems
-in HPC systems.
+Zimmer et al.,~\cite{zimmer:cug16} have demonstrated their monitoring framework
+to collect detailed stats information using their daemon program named
+I/O Router Congestion Daemon with monitoring performance counter
+of Gemini interconnect in the Titan at OCLF.
+Kumar et al.,~\cite{kumar:DSN2018} have utilized performance counter
+of Gemini interconnect in the Titan too.
+They have conducted to analyze and characterize
+errors and traffic congestion on Gemini interconnects. 
+Chunduri et al.,~\cite{chunduri:pmbs19} have suceeded to predict
+execution times of applications by the analysis of traffic congestion information
+from performance counters of Aries interconnects in the Theta at the ALCF.
+They have introduced machine learning approach in their prediction. 
+However, the above researches are not sufficient to characterize I/O activities
+on parallel file systems in HPC systems.
 
 Recently, holistic I/O monitoring has been proposed
 in several research works~\cite{lockwood:cug18,wang:cluster18,yang:nsdi2019}.
@@ -271,10 +283,11 @@ Yang et al. has proposed a monitoring framework
 named Beacon~\cite{yang:nsdi2019}.
 This framework provides a collection of monitoring tools for Metadata Servers (MDSes)
 and Object Storage Servers (OSSes) and analysis functions,
-including some visualization interface. These works are similar to our work regarding
-holistic approach in characterization of I/O activities.
+including some visualization interface.
+These works are similar to our work regarding holistic approach
+to characterize I/O activities.
 
-In contrast, our work addresses holistic I/O activity analysis
+On the other hand, our work addresses holistic I/O activity analysis
 through log data analysis of Tofu interconnects and parallel file systems
 including associated I/O nodes.
 The uniqueness of this framework is a holistic analysis approach

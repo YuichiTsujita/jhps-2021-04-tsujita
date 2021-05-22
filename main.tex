@@ -129,7 +129,7 @@ I/O performance results of applications.
 A profiling tool named Tofu~PA~\cite{profiler:fujitsu-tech-si} was provided
 in the K computer, which acquired statistical information called Tofu~PA information
 regarding communication in the Tofu interconnects~\cite{tofu:micro2012}
-on used compute nodes, with the purpose to tune communications among compute nodes.
+on compute nodes used, with the purpose to tune communications among compute nodes.
 However, there were no tools to get the Tofu~PA information of Tofu interconnects
 among I/O nodes and I/O activities of its parallel file systems.
 Similar to other HPC platforms, we have done I/O benchmark runs
@@ -158,13 +158,13 @@ a PostgreSQL database that keeps a large amount of executed job information (JOB
 and information about compute and I/O nodes (node information table).
 
 Given a unique ID for each job (JOB-ID), the analysis function of the framework
-provides us data such as averaged values of essential I/O activities on used OSSes,
+provides us data such as averaged values of essential I/O activities on OSSes used,
 bandwidth utilization of Tofu interconnects on I/O nodes, and heat-maps about
-I/O throughput of used OSTs from the log data with the help of the JOB-DB
+I/O throughput of OSTs used from the log data with the help of the JOB-DB
 and the node information table.
-In this paper, we demonstrate how such analyzed data can be used for further
-performance improvements by examining I/O bottlenecks or unbalanced situations
-in I/O workload among I/O nodes in our enhancements in collective MPI-IO
+In this paper, we demonstrated how such analyzed data could be used for further
+performance improvements by examining I/O bottlenecks and unbalanced situations
+in I/O workload among I/O nodes used in our enhancements in collective MPI-IO
 implementations named ``EARTH on K''~\cite{tsujita:WS_EuroMPI2014,tsujita:hpcasia18}.
 We have already conducted empirical benchmark evaluations
 in performance improvements for our enhancement work in the K computer
@@ -257,13 +257,14 @@ the traffic condition~\cite{zimmer:cug16,kumar:DSN2018,chunduri:pmbs19}.
 For example, Zimmer et al.,~\cite{zimmer:cug16} demonstrated their monitoring framework
 to collect detailed stats information using their daemon program named
 I/O Router Congestion Daemon with monitoring performance counter
-of Gemini interconnect in the Titan at OCLF.
+of Gemini interconnects in the Titan at the Oak Ridge Leadership Computing Facility.
 Separately, Kumar et al.,~\cite{kumar:DSN2018} utilized performance counter
 of Gemini interconnect in the Titan too.
 They analyzed and characterized errors and traffic congestion on Gemini interconnects. 
 Chunduri et al.,~\cite{chunduri:pmbs19} succeeded in execution time predictions
 of applications by analyzing traffic congestion information
-obtained from performance counters of Aries interconnects in the Theta at the ALCF.
+obtained from performance counters of Aries interconnects in the Theta
+at the Argonne Leadership Computing Facility.
 They introduced machine learning approach in their prediction. 
 However, the above studies were not sufficient to characterize I/O activities
 on parallel file systems in HPC systems.
@@ -287,7 +288,7 @@ including some visualization interface.
 The above studies are similar to our study regarding holistic approach
 to characterize I/O activities.
 
-On the other hand, our work addresses holistic I/O activity analysis
+On the other hand, our study addresses holistic I/O activity analysis
 through log data analysis of Tofu interconnects and parallel file systems
 including associated I/O nodes.
 The uniqueness of this framework is a holistic analysis approach
@@ -356,7 +357,7 @@ based on the assigned compute node layout according to
 the I/O zoning scheme~\cite{sumimoto:LUG2011}.
 I/O zoning scheme was introduced in order to mitigate I/O interference on OSTs
 and I/O nodes among jobs by assigning I/O nodes and OSTs on the same $Z$-link
-with used compute nodes.
+with compute nodes used.
 Fig.~\ref{fig:SUBSET_SYSRACK_K} shows I/O accesses from compute nodes
 at the system rack in the left side of this figure.
 I/O nodes on the same $Z$-links were configured to work with compute nodes
@@ -518,10 +519,10 @@ and the JOB-DB to analyze I/O activities on I/O nodes and the LFS.
 \end{figure}
 %
 Given a target JOB-ID, the framework retrieves information of the JOB-ID
-such as 6D mesh/torus network positions of used compute nodes and names of
-used system racks from the JOB-DB.
-Such information about used compute nodes and system racks is utilized
-to find used I/O nodes including LIOs from the I/O node table
+such as 6D mesh/torus network positions of compute nodes used and
+system racks used from the JOB-DB.
+Such information about compute nodes used and system racks is utilized
+to find I/O nodes used including LIOs from the I/O node table
 because the assigned I/O node layout is automatically configured
 by the shape of assigned compute nodes.
 Besides, start and finish times of the target job obtained from the JOB-DB
@@ -531,31 +532,31 @@ from a large amount of log data collected by {\itshape fluentd}.
 Once the framework collects all essential information, its log analysis function
 figures out and gives the following information for the given JOB-ID:
 \begin{itemize}
-\item Maximum waiting time of each interconnect at each used I/O node ($T_{wait}^{max}$)
+\item Maximum waiting time of each interconnect at each I/O node used ($T_{wait}^{max}$)
 from {\tt Tofu stats} log collection
 \item Peak bandwidth utilization ratio of the interconnects relative to
 the theoretical bandwidth during job execution ($R_{BW}$)
 from {\tt Tofu stats} log collection
-\item I/O throughput in both write and read operations on each used OST
+\item I/O throughput in both write and read operations on each OST used
 from {\tt IO rates} log collection
 \end{itemize}
 %
-The former two performance values are calculated by using the packet transfer metrics
-obtained from the TNR of used Tofu links, which are obtained from
+The former two performance values were calculated by using the packet transfer metrics
+obtained from the TNR of Tofu links used, which were obtained from
 {\tt Tofu stats} log colection.
 The function converts the cycle counts obtained from the TNR
 into time values in the unit of second for the $T_{wait}^{max}$.
-While the $R_{BW}$ is obtained by dividing the peak bandwidth
+While the $R_{BW}$ was obtained by dividing the peak bandwidth
 in Tofu links of the job with the theoretical bandwidth.
-Note that the peak bandwidth is obtained by dividing transferred packet size
+Note that the peak bandwidth was obtained by dividing transferred packet size
 with elapsed time of the specified job.
-In the proposed framework, we use the $R_{BW}$
-to examine effectiveness in packet transfer associated with I/O operations.
+In the proposed framework, we used the $R_{BW}$
+to examine effectiveness in packet transfers associated with I/O operations.
 
 While the I/O performance values were obtained by dividing an amount of data size
 in read and write operations with a monitoring interval time
 (600 seconds in the current configuration) in each snapshot
-in order to know I/O throughput at each used OST.
+in order to know I/O throughput at each OST used.
 Once the analysis function is executed, data are stored in the CSV format
 and associated heat-map image data are stored in the PNG format.
 
@@ -1320,7 +1321,7 @@ the 192 OSTs used at the HPIO benchmark run}
 In Fig.~\ref{fig:HPIO_OST_BW_HMAP_RD}, the EARTH use case with insufficient configuration
 ({\tt T:agg=0,rr=0,req=8}) showed lower performance compared with the original MPI-IO use case.
 Meanwhile, a full set of the three optimizations in the EARTH use case
-({\tt T:agg=1,rr=1,req=8}) achieved the highest I/O throughput at every used OST. 
+({\tt T:agg=1,rr=1,req=8}) achieved the highest I/O throughput at every OST used. 
 Read throughput heat-maps in Fig.~\ref{fig:HPIO_OST_BW_HMAP_RD} show
 the highest I/O throughput in the insufficient optimization configuration
 ({\tt T:agg=0,rr=0,req=8}), followed by the original MPI-IO use case

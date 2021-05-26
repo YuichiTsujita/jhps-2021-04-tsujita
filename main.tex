@@ -95,7 +95,7 @@ there is not enough chance to tune I/O operations on parallel file systems,
 including high speed interconnects among compute nodes and file systems.
 We propose an I/O performance optimization framework that utilizes log data of
 parallel file systems and interconnects in a holistic way
-for improving HPC system performance, including effective use
+for improving the performance of HPC system, including effective use
 of I/O nodes and parallel file systems.
 We demonstrated our framework at the K computer with two I/O benchmarks
 for the original and the enhanced MPI-IO implementations.
@@ -125,14 +125,21 @@ or I/O performance tuning
 of applications~\cite{lockwood:cug18,wang:cluster18,yang:nsdi2019}.
 Such analysis collects log data about file system activities in addition to
 I/O performance results of applications.
+As Yang et al., remarked in their paper~\cite{yang:nsdi2019},
+storage interconnects are another contention point on HPC systems.
+To this end, they have extended their framework named Beacon
+to monitor performance counters of InfiniBand network switches.
 
-A profiling tool named Tofu~PA~\cite{profiler:fujitsu-tech-si} was provided
-in the K computer, which acquired statistical information called Tofu~PA information
+Within this context, interconnects are one of the important point
+to tune not only inter-node communications in applications
+but also I/O accesses towards underlying storage systems.
+In the K computer, a profiling tool named Tofu~PA~\cite{profiler:fujitsu-tech-si}
+was provided, which acquired statistical information called Tofu~PA information
 regarding communication in the Tofu interconnects~\cite{tofu:micro2012}
 on compute nodes used, with the purpose to tune communications among compute nodes.
 However, there were no tools to get the Tofu~PA information of Tofu interconnects
 among I/O nodes and I/O activities of its parallel file systems.
-Similar to other HPC platforms, we have done I/O benchmark runs
+Similar to other HPC platforms, we conducted I/O benchmark runs
 to evaluate and tune performance of I/O subsystems in empirical way
 in the K computer.
 For investigating I/O performance bottlenecks and further I/O performance improvements,
@@ -182,10 +189,10 @@ in order to show their impact in each underlying I/O subsystems.
 % in investigating performance advantages achieved by
 % the enhanced MPI-IO compared with the original MPI-IO
 % through two I/O benchmark runs.
-We have found new explicit differences in metrics which were given
+We have found new explicit differences in metrics that were given
 by the framework in not only write operations but also read operations.
 In addition, we propose scoring scheme in the framework
-so that we can easily find the best optimization candidate.
+so that we can easily find optimal optimization candidates.
 
 Rest of this paper is organized as follows.
 In Sec.~\ref{sec:RELATED_WORK}, we discuss the related work.
@@ -199,7 +206,7 @@ In Sec.\ref{sec:EVAL}, we demonstrate experimental evaluations
 for the proposed framework at the K computer, and we discuss the usefulness
 of the proposed framework through examinations about performance improvements
 achieved by the enhanced MPI-IO.
-Finally we conclude the paper in Sec.~\ref{sec:CONCLUSIONS}.
+Finally, we conclude the paper in Sec.~\ref{sec:CONCLUSIONS}.
 
 \section{Related Work}
 \label{sec:RELATED_WORK}
@@ -241,7 +248,7 @@ including client-side statistics recorded on servers.
 Using those metrics, they demonstrated optimization effect
 in collective MPI-IO implementation.
 However, they did not focused on behavior of interconnects.
-Detailed study in production runs was conducted in \cite{patel:sc19}
+A detailed study in production runs was conducted in \cite{patel:sc19}
 by analyzing server-side log data.
 Even sufficient logging of each server-side component did not provide
 causal relationships between client and server-side activities.
@@ -270,16 +277,16 @@ However, the above studies were not sufficient to characterize I/O activities
 on parallel file systems in HPC systems.
 
 Recently, holistic I/O monitoring has been proposed
-in several research works~\cite{lockwood:cug18,wang:cluster18,yang:nsdi2019}.
+in many research works~\cite{lockwood:cug18,wang:cluster18,yang:nsdi2019}.
 For example, Lockwood et al. proposed a holistic I/O monitoring framework
 named TOKIO~\cite{lockwood:cug18}.
-It consisted of several components for monitoring, analysis and visualization
+It consisted of several components for monitoring, analysis, and visualization
 for administrators and users.
 Separately, Wang et al. proposed a monitoring and analysis framework
-named IOMiner~\cite{wang:cluster18}, where Darshan~\cite{darshan:web}
+named IOMiner~\cite{wang:cluster18}, in which Darshan~\cite{darshan:web}
 was introduced to collect I/O performance metrics.
 Application users can easily identify root cause of
-poor I/O performance with the framework from a plenty of log data
+poor I/O performance with the framework from vast amounts of log data
 associated with I/O subsystems.
 Yang et al. proposed a monitoring framework named Beacon~\cite{yang:nsdi2019}.
 This framework provided a collection of monitoring tools for Metadata Servers (MDSes)
@@ -299,6 +306,7 @@ and associated I/O activity traces at parallel file systems.
 \label{sec:K_COMP}
 
 \subsection{Overview of the K computer}
+\label{ssec:K_COMP_OVERVIEW}
 
 The K computer finished its operation for about seven years in August 2019.
 The system had two-layered file systems, a local file system (LFS)
@@ -321,8 +329,9 @@ Every compute node and I/O node were connected through the Tofu interconnect
 in a six-dimensional (6D) mesh/torus network represented by $X$, $Y$, $Z$, $A$, $B$, and $C$.
 Tofu links of $X$, $Z$, and $B$ were connected in a torus configuration,
 while those of $Y$, $A$, and $C$ were connected in a mesh configuration.
-However, torus configuration of the $Z$-link was only available in I/O accesses
-through I/O nodes because I/O nodes were included in only I/O accesses.
+However, torus configuration of the $Z$-link was only available
+in I/O accesses through I/O nodes because I/O nodes were included
+only in I/O accesses.
 In other cases, the $Z$-link was used in a mesh configuration for
 inter-node communications by application jobs.
 
@@ -358,8 +367,8 @@ the I/O zoning scheme~\cite{sumimoto:LUG2011}.
 I/O zoning scheme was introduced in order to mitigate I/O interference on OSTs
 and I/O nodes among jobs by assigning I/O nodes and OSTs on the same $Z$-link
 with compute nodes used.
-Fig.~\ref{fig:SUBSET_SYSRACK_K} shows I/O accesses from compute nodes
-at the system rack in the left side of this figure.
+In Fig.~\ref{fig:SUBSET_SYSRACK_K}, I/O accesses from compute nodes
+at the system rack are illustrated on the left side.
 I/O nodes on the same $Z$-links were configured to work with compute nodes
 that issued I/O requests, and those I/O nodes
 take part in data transfers during I/O accesses on the LFS.
@@ -369,7 +378,7 @@ then routed to a target OSS running on an LIO.
 
 Performance profiling tools including Tofu~PA addressed to tune performance of
 compute nodes and communications among compute nodes.
-It is noted that the similar profiling tool is available at
+It is noted that similar profiling tools are available at
 our current HPC system, the supercomputer Fugaku~\cite{fugaku_info:web}
 (hereinafter, Fugaku).
 %% as remarked  of \cite{fugaku_info:web}.
@@ -543,15 +552,15 @@ from {\tt IO rates} log collection
 %
 The former two performance values were calculated by using the packet transfer metrics
 obtained from the TNR of Tofu links used, which were obtained from
-{\tt Tofu stats} log colection.
+{\tt Tofu stats} log collection.
 The function converts the cycle counts obtained from the TNR
-into time values in the unit of second for the $T_{wait}^{max}$.
+into time values in the unit of a second for the $T_{wait}^{max}$.
 While the $R_{BW}$ was obtained by dividing the peak bandwidth
 in Tofu links of the job with the theoretical bandwidth.
 Note that the peak bandwidth was obtained by dividing transferred packet size
 with elapsed time of the specified job.
 In the proposed framework, we used the $R_{BW}$
-to examine effectiveness in packet transfers associated with I/O operations.
+to examine the effectiveness in packet transfers associated with I/O operations.
 
 While the I/O performance values were obtained by dividing an amount of data size
 in read and write operations with a monitoring interval time
@@ -583,7 +592,7 @@ Therefore, the original MPI-IO implementation is not suitable
 for the FEFS to achieve high I/O performance.
 
 The current ROMIO with the improved two-phase I/O for Lustre~\cite{lustre-adio:whpaper-2008}
-has a potential to improve performance on the FEFS.
+has the potential to improve performance on the FEFS.
 Our enhanced MPI-IO implementation named ``EARTH on K''
 (hereinafter, EARTH) has been developed for the K computer
 based on the improved two-phase I/O with topology-aware performance optimizations
@@ -625,7 +634,7 @@ where numbers in circles represent MPI ranks
 and the numbers ranging from {\itshape i} to {\itshape iv} represent
 the order of striping accesses.
 %
-\begin{figure}[htb]
+\begin{figure}[tb]
 \centering
 \begin{minipage}[t]{0.42\textwidth}
 \centering
@@ -658,7 +667,7 @@ Figure~\ref{fig:IO_THROT} illustrates
 I/O throttling scheme operated by 192 aggregators accessing 12 OSTs,
 where we assume every process acts as an aggregator.
 %
-\begin{figure}[htb]
+\begin{figure}[tb]
 \centering
 \begin{minipage}[b]{0.45\textwidth}
 \centering
@@ -750,7 +759,7 @@ Fig.~\ref{fig:BLK_LAYOUT},
 four processes in the two compute nodes ({\itshape CN\,\#0} and {\itshape CN\,\#1})
 work as aggregators, which are from 0 to 7 in MPI ranks.
 As a result, we may have contention within the same compute node
-to proceed each phase of two-phase I/O.
+in performing each phase of two-phase I/O.
 It is also noted that such layout leads to high I/O workload
 in each node compared with other compute nodes without aggregators.
 Meanwhile, the round-robin aggregator layout in
@@ -759,11 +768,10 @@ can distribute I/O workload evenly
 among compute nodes, and this layout also prevents aggregators
 from I/O access contention within the same compute node
 by reducing the number of aggregators in the same compute node.
-%% if we have multiple aggregators on a subset of compute nodes.
 
 Although the above enhancements outperformed the original version
 in an empirical study using I/O benchmark runs~\cite{tsujita:WS_EuroMPI2014,tsujita:hpcasia18},
-there was not any investigations about performance impact
+there was not any investigations about the performance impact
 of those optimizations in I/O nodes or underlying file systems.
 One of the main reasons is the lack of tools to characterize optimization
 effects in data transfers among I/O nodes and I/O accesses
@@ -821,6 +829,7 @@ with the proposed framework.
 In both cases, we enabled two-phase I/O implemented in ROMIO.
 
 \subsubsection{IOR}
+\label{ssec:IOR_CONFIG}
 
 The following command was executed in write operations to generate
 a shared file of 3~TiB (= 256~MiB $\times$ 12,288) per iteration:
@@ -835,18 +844,6 @@ followed by write operations with the above command
 in every optimization parameter configuration.
 ``{\tt hints\_info}'', is a file describing some hints associated with
 I/O operations such as the number of processes per node and so forth.
-%
-% \begin{figure}[tb]
-% \begin{verbatim}
-%        IOR_HINT__MPI__romio_lustre_co_ratio=32
-%        IOR_HINT__MPI__cb_config_list=*:4
-%        IOR_HINT__MPI__romio_cb_read=enable
-%        IOR_HINT__MPI__romio_cb_write=enable
-% \end{verbatim}
-% \caption{Hints passed to the IOR benchmark code}
-% \label{fig:IOR_HINTS}
-% \end{figure}
-%
 A target file ({\tt test-IOR.dat}) was generated in the directory
 ({\tt \$\{TARGET\_DIR\}}) with 192 stripe count.
 We carried out collective MPI-IO with and without two-phase I/O by enabling
@@ -855,6 +852,7 @@ through the ``{\tt hints\_info}.''
 %
 
 \subsubsection{HPIO}
+\label{ssec:HPIO_CONFIG}
 
 We executed the following command for write operations to generate
 a shared file of about 2.1~TiB ($\approx$ (5,992~B + 256~B) $\times$ 12,288 $\times$ 30,729 - 256~B)
@@ -872,10 +870,10 @@ Note that the option, ``{\tt cb\_config\_list}'' was available only for
 the EARTH case, and thus all processes worked as aggregators
 in the original case as we explained.
 The target file was generated in the directory {\tt \$\{TARGET\_DIR\}}
-with 192 stripe count. We carried out the collective MPI-IO
+with 192 stripe count. We conducted the collective MPI-IO
 only with two-phase I/O because collective MPI-IO without two-phase I/O was
 time-consuming under the non-contiguous access pattern and
-it was difficult to do in a limited machine time.
+it was difficult to perform in a limited machine time.
 
 \subsection{Benchmark results}
 
@@ -938,8 +936,6 @@ at the IOR benchmark run.
 \centering
 \begin{minipage}[t]{0.46\textwidth}
  \centering
- %%\includegraphics[width=1.0\textwidth]{IOR-ost_io_stats-qdepth-ext-dual.png}
- %%\subcaption{{\tt req\_qdepth} (Left: Overall, Right: Zoomed less than or equal to 600 entries)}
  \includegraphics[width=0.96\textwidth]{IOR-ost_io_stats-qdepth-ext.png}
  \subcaption{{\tt req\_qdepth}: The vertical axis is expanded from 600 to 3,500}
  \label{fig:IOR_req_qdepth}
@@ -948,8 +944,6 @@ at the IOR benchmark run.
 %\noindent
 \begin{minipage}[t]{0.46\textwidth}
  \centering
- %%\includegraphics[width=1.0\textwidth]{IOR-ost_io_stats-waittime-ext-dual.png}
- %%\subcaption{{\tt req\_waittime} (Left: Overall, Right: Zoomed less than or equal to 800\,ms)}
  \includegraphics[width=0.96\textwidth]{IOR-ost_io_stats-waittime-ext.png}
  \subcaption{{\tt req\_waittime}: The vertical axis is expanded from 800\,ms to 16\,s}
  \label{fig:IOR_req_waittime}
@@ -1164,8 +1158,6 @@ about the 192 OSTs used during the IOR benchmark run}
 \label{fig:IOR_OST_BW_HMAP_WR}
 \end{figure}
 %
-% Each heat-map showed write throughput of each OST ranging from 0 to 160\,MiB/s,
-% where
 Horizontal and vertical axes ranging from 0 to 15 and from 0 to 11,
 indicate subjected relative 2D positions of OSTs used from the logical 3D layout
 of the K computer.
@@ -1511,11 +1503,11 @@ provided by the RIKEN Center for Computational Science.
 
 \reviews   % The review section
 
-\subsection*{Reviewer: \href{Optional URL to reviewer page}{Firstname LastName}, Date: 2021-04-16}
+\subsection*{Reviewer: Lingfang Zeng, Date: 2021-04-16}
 
 \paragraph{Overall summary and proposal for acceptance}
 What makes the reviewer deeply influenced in this manuscript is that the experiment is very rich. The main shortcomings of the manuscript are: (1) lack of discussion on the optimization scheme and technical details (which also leads to the lack of support/explanation in the Section “Experimental Evaluation”: what are the specific measures / improvements to achieve the performance optimization?) (2) The technical schemes and experimental platform are out of date and lack of novelty. (3) The unique software and hardware scheme makes the technical schemes of this draft unrepeatable, which is not in line with the purpose of JHPS. It is suggested that the draft be rejected.
-Others: (1) Page 4, Section 3 “K computer and Its File System Monitoring” -- The system was retired (about two years). In the era of Exascale Supercomputer and intelligent computing, always new architecture and technology can attract readers. (2) Page 8, Section 5 "Enhanced MPI-IO Implementation: EARTH on K", "Its advanced functions are summarized in the following three key optimization parameters described by agg, req, and rr, respectively:" -- This is the main contribution of this draft, but the details are too few. Although the reviewer understands the relevant technical details, the readers may not be sure. On the whole, the contribution of this draft is too little, lack of novelty. (3) Page 10, Section 6 "Experimental Evaluation", Subsection 6.1 "Benchmark configuration" -- K computer has been running for many years. It has run many typical applications and must have collected a lot of real log information. Therefore, I suggest using real application log and system log information instead of being generated by benchmark
+Others: (1) Page 4, Section 3 “K computer and Its File System Monitoring” -- The system was retired (about two years). In the era of Exascale Supercomputer and intelligent computing, always new architecture and technology can attract readers. (2) Page 8, Section 5 "Enhanced MPI-IO Implementation: EARTH on K", "Its advanced functions are summarized in the following three key optimization parameters described by agg, req, and rr, respectively:" -- This is the main contribution of this draft, but the details are too few. Although the reviewer understands the relevant technical details, the readers may not be sure. On the whole, the contribution of this draft is too little, lack of novelty. (3) Page 10, Section 6 "Experimental Evaluation", Subsection 6.1 "Benchmark configuration" -- K computer has been running for many years. It has run many typical applications and must have collected a lot of real log information. Therefore, I suggest using real application log and system log information instead of being generated by benchmark.
 \paragraph{Scope}   % in regards to the journal, i.e., does the topic fit?
 Yes. Its topic fits the JHPS.
 \paragraph{Significance}   % of the research, minor vs. major
@@ -1528,4 +1520,87 @@ It's clear and easy to understand.
 Yes.
 \paragraph{Correctness}   % Is the research correct
 There are some sound.
+
+
+\subsection*{Reviewer: Suren Byna, Date: 2021-05-09}
+
+\paragraph{Overall summary}
+
+In contrast to existing I/O performance analysis efforts, this paper collects interconnection information and detailed parallel file system information on I/O nodes. This additional information allows authors to analyze I/O performance using OSS stats files and interconnect bandwidth. 
+
+Some of my concerns were related to the overhead for tracing and storing the detailed information, the impact of other concurrent jobs on the system affecting the bandwidth, and a comparison with existing logs. 
+
+It seems that the Tofu and I/O stats have been extracted periodically and stored in a separate database. It was unclear to me if that periodic access cost anything? How large was the stats database?
+
+In the analysis shown (OSS stats, bandwidth utilization, and load balance of I/O to OSTs), were there other jobs running concurrently along with the IOR and HPIO jobs that are being studied? What was the impact of them?
+
+Since the results shown here are mainly for a decommissioned system, is the stats collection and storing continuing on current production systems? What was the impact of this study? While various plots were shown for the same configurations across the evaluation section, how do they (bandwidth utilization, waiting time in data transfer, OSS stats, etc.) correlate with the I/O throughput? 
+
+The last point regarding comparison with existing logs, such as Darshan and Darshan’s extended tracing (DXT), could we get the information needed for the analysis shown in this paper? If not, what information is unavailable? It would be good to describe and compare. 
+
+\paragraph{Scope}   % in regards to the journal, i.e., does the topic fit?
+Yes. Its topic fits the JHPS.
+
+\paragraph{Significance}   % of the research, minor vs. major
+Minor.
+
+\paragraph{Readability}   % English and structure appropriate?
+Yes.
+
+\paragraph{Presentation}
+It's easy to read the paper; I’d suggest some reorganizing in the introduction to motivate the problem before jumping into the Tofu PA log collection and information. 
+\paragraph{References}   % Correctly formatted?
+Yes.
+
+\paragraph{Correctness}   % Is the research correct
+The exploration and evaluation are correct.
+
+
+\subsection*{Reviewer: Anthony Kougkas, Date: 2021-05-16}
+
+\paragraph{Overall summary}
+The paper presents a holistic log data analysis framework to characterize I/O activities at the
+LFS and data transfers through the Tofu interconnects of I/O nodes in I/O optimization at
+the K computer. Further, the paper presents a comparison between vanilla MPI-IO and EARTH, an optimized one, and how the obtained profiling information gave insights to understand why the EARTH demonstrated higher I/O performance relative to the original MPI-IO. The analysis framework allowed the authors to uncover how much I/O activities at the LFS and bandwidth utilization of the Tofu links of I/O nodes impacted the performance of EARTH. Extensive results were presented and analyzed. 
+
+I enjoyed reading about this work. The paper is informative on issues stemmed by poor monitoring and analysis of I/O activities in a large computing environment. This reviewer found the paper focusing on the K computer a bit restricting in drawing conclusions in general. A lot of the proposed framework is specific to the architecture (e.g., LIO, GIO, BIO are all particulars of the K computer) and I am not convinced that the audience can extract generally useful methodologies on I/O tracking. However, the paper reads well, has a decent motivation section, and the extensive results presented are only positive. I am recommending a minor revision with the following three suggestions: a) the authors should invest some time bringing the manuscript in published quality through detailed proofreading. b) add a subsection (or a clear paragraph somewhere early in the paper) discussing in detail the intellectual contributions. c) add a discussions and considerations section (before the evaluation maybe) where the authors can connect their methodology in a more general architecture (i.e., how could we achieve the same depth of collected information for another HPC machine? What parts of this work are specific to K computer and what are not?  Is the framework developed open sourced? What are the caveats of the proposed analysis?)
+
+\paragraph{Strengths}
+
+\begin{itemize}
+\item The paper addresses issues in an area (i.e., I/O activity monitoring) that needs more investigation by the community.
+\item  The paper has done a great work presenting the methodology the authors followed and described the architecture of K computer in great detail making it easy to follow. 
+\item  The paper went to great lengths to present detailed performance analysis of MPI-IO and EARTH.
+\end{itemize}
+
+\paragraph{Weaknesses}
+
+\begin{itemize}
+\item The paper is more of an experience paper. There is nothing general in the findings but solely focuses on the K computer. Even though this was a production machine, it does not represent all HPC architectures. There is little (or no) discussion as to how the reader can replicate their work for a general architecture. 
+\item The paper needs a good proofreading, possibly multiple passes. While it is not poorly written, there are many areas where grammar and syntax can be polished 
+\end{itemize}
+
+                   
+\subsection*{Reviewer: George Markomanolis, Date: 20210-05-17}
+\paragraph{Overall summary}
+
+The authors present their work, an I/O performance optimization framework that uses log data of parallel file systems and interconnects in a holistic way. They discuss the Tofu PA profiling tool on the K computer for the Tofu interconnects. They present how all the framework works and its usefulness for specific cases. One main disadvantage of this paper is that this is a work for a decommissioned system, the K supercomputer. The collection of statistics every 1 or 10 minutes depending on the type of the stats can not correlate with every I/O intensive application. The installed ROMIO version on the K computer is not optimized for the Lustre, thus a newer version was used and the comparison between these two is not fair. There are presented some results from their approach and their metrics are explained. They do achieve better I/O performance with their tuning.
+The manuscript is more experimental, some times tuning parameters becomes more known case but the holistic approach on such system is not a common topic. I would like to see more explanations about the duration of the logs collection as collecting every a few minutes is a really specific I/O pattern. I assume it is not possible to have more diverse applications as the K computer is not available anymore. I would like also some discussion regarding overhead from your tool.
+\paragraph{Scope}   % in regards to the journal, i.e., does the topic fit?
+Yes. It fits.
+\paragraph{Significance}   % of the research, minor vs. major
+Minor.
+\paragraph{Readability}   % English and structure appropriate?
+Yes but it could be improved
+\paragraph{Presentation}
+It is good but a proofreading would help.
+\paragraph{References}   % Correctly formatted?
+Yes.
+\paragraph{Correctness}   % Is the research correct
+Yes, although the fact that the research is not reproducible because of the decommissioned system is always an issue.
+
+
+
+
 \end{document}
+

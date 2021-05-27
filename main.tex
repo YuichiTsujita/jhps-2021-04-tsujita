@@ -85,7 +85,7 @@
 \maketitle
 
 \begin{abstract}
-The performance of high-performance computing (HPC) systems is increasing
+The computing power of high-performance computing (HPC) systems is increasing
 with a rapid growth in the number of compute nodes and CPU cores.
 Meanwhile, I/O performance is one of the bottlenecks in improving HPC system performance.
 Current HPC systems are equipped with parallel file systems such as GPFS and Lustre
@@ -126,11 +126,11 @@ of applications~\cite{lockwood:cug18,wang:cluster18,yang:nsdi2019}.
 Such analysis collects log data about file system activities in addition to
 I/O performance results of applications.
 As Yang et al., remarked in their paper~\cite{yang:nsdi2019},
-storage interconnects are another contention point on HPC systems.
+a storage interconnect is another contention point on HPC systems.
 To this end, they have extended their framework named Beacon
 to monitor performance counters of InfiniBand network switches.
 
-Within this context, interconnects are one of the important point
+Within this context, an interconnect is one of the important points
 to tune not only inter-node communications in applications
 but also I/O accesses towards underlying storage systems.
 In the K computer, a profiling tool named Tofu~PA~\cite{profiler:fujitsu-tech-si}
@@ -140,7 +140,7 @@ on compute nodes used, with the purpose to tune communications among compute nod
 However, there were no tools to get the Tofu~PA information of Tofu interconnects
 among I/O nodes and I/O activities of its parallel file systems.
 Similar to other HPC platforms, we conducted I/O benchmark runs
-to evaluate and tune performance of I/O subsystems in empirical way
+to evaluate and tune performance of I/O subsystems in an empirical way
 in the K computer.
 For investigating I/O performance bottlenecks and further I/O performance improvements,
 a well-balanced I/O workload among compute nodes, I/O nodes, and parallel file systems
@@ -185,27 +185,24 @@ Compared with our previous paper~\cite{tsujita:hpc_iodc20},
 we have made further analysis for additional optimizations
 in an enhanced MPI-IO with and without two-phase I/O
 in order to show their impact in each underlying I/O subsystems.
-% its usefulness
-% in investigating performance advantages achieved by
-% the enhanced MPI-IO compared with the original MPI-IO
-% through two I/O benchmark runs.
-We have found new explicit differences in metrics that were given
-by the framework in not only write operations but also read operations.
+We have found additional explicit differences in metrics
+that were given by the framework in not only write operations
+but also read operations.
 In addition, we propose scoring scheme in the framework
 so that we can easily find optimal optimization candidates.
 
 Rest of this paper is organized as follows.
-In Sec.~\ref{sec:RELATED_WORK}, we discuss the related work.
-A system overview including a file I/O subsystem of the K computer,
-which is an evaluated platform for the proposed framework,
+In Sec.~\ref{sec:RELATED_WORK}, we discuss related work.
+A system overview of the K computer including its file I/O subsystems,
+in which we conducted implementation and evaluation of the proposed framework,
 is explained in Sec.~\ref{sec:K_COMP}.
 In Sec.~\ref{sec:ANAL_SYS}, we present the proposed analysis framework.
 We also explain the ``EARTH on K'' in Sec.~\ref{sec:EARTH},
 where we briefly present its advanced functions relative to the original MPI-IO.
-In Sec.\ref{sec:EVAL}, we demonstrate experimental evaluations
+In Sec.\ref{sec:EVAL}, we report experimental evaluations
 for the proposed framework at the K computer, and we discuss the usefulness
 of the proposed framework through examinations about performance improvements
-achieved by the enhanced MPI-IO.
+achieved by the ``EARTH on K''.
 Finally, we conclude the paper in Sec.~\ref{sec:CONCLUSIONS}.
 
 \section{Related Work}
@@ -238,22 +235,23 @@ Compared with the above researches, our case also focuses on behavior
 of interconnects among I/O nodes in the target file system.
 
 Log data collection and analysis for performance tuning were conducted in
-server-side analysis~\cite{liu:fast2014,liu:sc16,xu:cug16}.
-For example, Liu et al., in \cite{liu:fast2014,liu:sc16} proposed
-a framework to identify I/O activities automatically
-using trace log data from file system servers.
-Separately, Xu et al.,\cite{xu:cug16} proposed their I/O profiling framework
+server-side analysis~\cite{liu:fast2014,liu:sc16,xu:cug16,patel:sc19}.
+For example, Liu et al., proposed a framework to identify I/O activities
+automatically using trace log data from file system servers~\cite{liu:fast2014,liu:sc16}.
+Separately, Xu et al., proposed their I/O profiling framework
 named LIOProf to track I/O activities of on Lustre file system servers
-including client-side statistics recorded on servers.
+including client-side statistics recorded on servers~\cite{xu:cug16}.
 Using those metrics, they demonstrated optimization effect
 in collective MPI-IO implementation.
-However, they did not focused on behavior of interconnects.
 A detailed study in production runs was conducted in \cite{patel:sc19}
-by analyzing server-side log data.
-Even sufficient logging of each server-side component did not provide
-causal relationships between client and server-side activities.
+by analyzing server-side log data of parallel file systems
+to draw new insights about I/O characteristics.
+% even though sufficient logging of each server-side component did not provide
+% causal relationships between client and server-side activities.
+However, their researches did not focus on behavior of interconnects.
 Our proposed framework supports interconnect monitoring
 in performance bottleneck investigation to tune I/O optimization
+with server-side log data of a local file system
 although the framework has not been used in production runs at the K computer.
 
 Interconnects are also one of the key components in HPC systems.

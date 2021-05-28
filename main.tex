@@ -125,7 +125,7 @@ or I/O performance tuning
 of applications~\cite{lockwood:cug18,wang:cluster18,yang:nsdi2019}.
 Such analysis collects log data about file system activities in addition to
 I/O performance results of applications.
-As Yang et al., remarked in their paper~\cite{yang:nsdi2019},
+As Yang et al. remarked in their paper~\cite{yang:nsdi2019},
 a storage interconnect is another contention point on HPC systems.
 To this end, they have extended their framework named Beacon
 to monitor performance counters of InfiniBand network switches.
@@ -202,7 +202,7 @@ where we briefly present its advanced functions relative to the original MPI-IO.
 In Sec.\ref{sec:EVAL}, we report experimental evaluations
 for the proposed framework at the K computer, and we discuss the usefulness
 of the proposed framework through examinations about performance improvements
-achieved by the ``EARTH on K''.
+achieved by the ``EARTH on K'' at the K computer.
 Finally, we conclude the paper in Sec.~\ref{sec:CONCLUSIONS}.
 
 \section{Related Work}
@@ -213,17 +213,17 @@ These studies showed numerous characteristics in terms of I/O access patterns
 performed by applications on HPC systems using Lustre file systems.
 I/O monitoring at storage system level was studied
 in \cite{isc14:kunkel,uselton:cug13,madireddy:nas17}.
-For example, Kunkel et al.,~\cite{isc14:kunkel} proposed a monitoring and analysis framework
-to suggest and apply performance optimizations automatically.
+For example, Kunkel et al. proposed a monitoring and analysis framework
+to suggest and apply performance optimizations automatically~\cite{isc14:kunkel}.
 It assisted locating and diagnosing performance problems.
 Separately, Uselton and Write~\cite{uselton:cug13} proposed extended monitoring
 about metrics available from Lustre using Lustre Monitoring Tool~\cite{LMT:GitHub}.
 They characterized I/O patterns with their own metric named File System Utilization
 using obtained metrics.
-Madireddy et al.,\cite{madireddy:nas17} conducted I/O system analysis
+Madireddy et al. conducted I/O system analysis
 using operation log data, and they demonstrated I/O characterization
 of each job through correlation between I/O patterns of each job and I/O
-subsystem activities.
+subsystem activities~\cite{madireddy:nas17}.
 They also discussed influence of monitoring interval in system performance.
 Multi-platform study using system logs of file systems was reported
 in \cite{luu:HPDC2015}.
@@ -236,9 +236,9 @@ of interconnects among I/O nodes in the target file system.
 
 Log data collection and analysis for performance tuning were conducted in
 server-side analysis~\cite{liu:fast2014,liu:sc16,xu:cug16,patel:sc19}.
-For example, Liu et al., proposed a framework to identify I/O activities
+For example, Liu et al. proposed a framework to identify I/O activities
 automatically using trace log data from file system servers~\cite{liu:fast2014,liu:sc16}.
-Separately, Xu et al., proposed their I/O profiling framework
+Separately, Xu et al. proposed their I/O profiling framework
 named LIOProf to track I/O activities of on Lustre file system servers
 including client-side statistics recorded on servers~\cite{xu:cug16}.
 Using those metrics, they demonstrated optimization effect
@@ -258,21 +258,25 @@ Interconnects are also one of the key components in HPC systems.
 Monitoring data transfers of interconnects tells us a hot-spot of traffic congestion
 for instance, and such approaches succeeded in analysis of
 application activities and performance impact associated with
-the traffic condition~\cite{zimmer:cug16,kumar:DSN2018,chunduri:pmbs19}.
-For example, Zimmer et al.,~\cite{zimmer:cug16} demonstrated their monitoring framework
-to collect detailed stats information using their daemon program named
-I/O Router Congestion Daemon with monitoring performance counter
-of Gemini interconnects in the Titan at the Oak Ridge Leadership Computing Facility.
-Separately, Kumar et al.,~\cite{kumar:DSN2018} utilized performance counter
-of Gemini interconnect in the Titan too.
+the traffic condition~\cite{zimmer:cug16,kumar:DSN2018,chunduri:pmbs19,yang:nsdi2019}.
+Zimmer et al. demonstrated their monitoring framework to collect detailed stats information
+using their daemon program named I/O Router Congestion Daemon with monitoring
+performance counter of Gemini interconnects in the Titan at the Oak Ridge Leadership
+Computing Facility~\cite{zimmer:cug16}.
+Kumar et al. utilized performance counter of Gemini interconnect
+in the Titan too~\cite{kumar:DSN2018}.
 They analyzed and characterized errors and traffic congestion on Gemini interconnects. 
-Chunduri et al.,~\cite{chunduri:pmbs19} succeeded in execution time predictions
+Chunduri et al. succeeded in execution time predictions
 of applications by analyzing traffic congestion information
 obtained from performance counters of Aries interconnects in the Theta
-at the Argonne Leadership Computing Facility.
-They introduced machine learning approach in their prediction. 
+at the Argonne Leadership Computing Facility~\cite{chunduri:pmbs19}.
+They introduced machine learning approach in their prediction.
 However, the above studies were not sufficient to characterize I/O activities
 on parallel file systems in HPC systems.
+Within this context, Yang el al. pointed out that storage interconnect is
+another contention point on HPC systems~\cite{yang:nsdi2019}.
+They have extended their I/O monitoring framework to monitor performance counters
+of InfiniBand network switches.
 
 Recently, holistic I/O monitoring has been proposed
 in many research works~\cite{lockwood:cug18,wang:cluster18,yang:nsdi2019}.
@@ -290,6 +294,8 @@ Yang et al. proposed a monitoring framework named Beacon~\cite{yang:nsdi2019}.
 This framework provided a collection of monitoring tools for Metadata Servers (MDSes)
 and Object Storage Servers (OSSes) and analysis functions,
 including some visualization interface.
+Their extended monitoring for InfiniBand networks covered to
+find network contention in I/O operations.
 The above studies are similar to our study regarding holistic approach
 to characterize I/O activities.
 
@@ -791,7 +797,7 @@ Although IOR supports two file creation modes, accessing
 file per rank and shared access to a single file,
 we utilized the shared access mode with collective MPI-IO.
 Meanwhile, HPIO supports I/O accesses for non-contiguous data layout,
-and we executed collective MPI-IO for the data layout.
+and we performed collective MPI-IO for the data layout.
 For both benchmark runs, we initiated 12,288 processes on 3,072 compute nodes
 forming a logical 3D layout of $8\times12\times32$ in order to eliminate I/O interference
 from other jobs. According to the 3D layout of assigned compute nodes,
@@ -837,7 +843,7 @@ $ ior -i 5 -a MPIIO -c -U hints_info -k -m -vvv -w -t 256m -b 256m \
     -o ${TARGET_DIR}/test-IOR.dat -d 0.1
 \end{verbatim}
 %
-We executed read operations with the same command changing ``-w'' by ``-r'',
+We performed read operations with the same command changing ``-w'' by ``-r'',
 followed by write operations with the above command
 in every optimization parameter configuration.
 ``{\tt hints\_info}'', is a file describing some hints associated with

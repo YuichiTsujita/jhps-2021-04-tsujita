@@ -133,10 +133,11 @@ to monitor performance counters of InfiniBand network switches.
 Within this context, an interconnect is one of the important points
 to tune not only inter-node communications in applications
 but also I/O accesses towards underlying storage systems.
-In the K computer, a profiling tool named Tofu~PA~\cite{profiler:fujitsu-tech-si}
-was provided, which acquired statistical information called Tofu~PA information
-regarding communication in the Tofu interconnects~\cite{tofu:micro2012}
-on compute nodes used, with the purpose to tune communications among compute nodes.
+A profiling tool named Tofu~PA~\cite{profiler:fujitsu-tech-si}
+was provided in the K computer, which acquired statistical information
+called Tofu~PA information regarding communication
+in the Tofu interconnects~\cite{tofu:micro2012} on compute nodes used,
+with the purpose to tune communications among compute nodes.
 However, there were no tools to get the Tofu~PA information of Tofu interconnects
 among I/O nodes and I/O activities of its parallel file systems.
 Similar to other HPC platforms, we conducted I/O benchmark runs
@@ -306,7 +307,7 @@ The uniqueness of this framework is a holistic analysis approach
 using data transfer status on the Tofu interconnects among I/O nodes
 and associated I/O activity traces at parallel file systems.
 
-\section{K computer and Its File System Monitoring}\label{sec:K_OVERVIEW}
+\section{K computer and Its File System Monitoring}
 \label{sec:K_COMP}
 
 \subsection{Overview of the K computer}
@@ -401,7 +402,7 @@ using only the existing profiling tools.
 We have addressed to extract I/O activity information of the LFS
 in order to investigate operation status of the LFS
 for not only finding malfunctions but also performance tuning.
-In this context, we have been conducting to collect log data from servers
+In this context, we conducted to collect log data from servers
 associated with the LFS during the K computer operation,
 as shown in Figure~\ref{fig:Log-collect-K}.
 %

@@ -314,12 +314,12 @@ and associated I/O activity traces at parallel file systems.
 
 The K computer finished its operation for about seven years in August 2019.
 The system had two-layered file systems, a local file system (LFS)
-and eight volumes of a global file system (GFS), as shown in Fig.~\ref{fig:K_OVERVIEW}.
+and eight volumes of a global file system (GFS), as shown in Figure~\ref{fig:K_OVERVIEW}.
 %
 \begin{figure}[tb]
 \centering
 \includegraphics[width=0.6\textwidth]{K-system-overview.png}
-\caption{System configuration of the K computer}
+\caption{System configuration of the K computer.}
 \label{fig:K_OVERVIEW}
 \end{figure}
 %
@@ -347,7 +347,7 @@ and I/O accesses from compute nodes towards the LFS.
 %% \includegraphics[width=0.7\textwidth]{K-system-rack-config.png}
 \includegraphics[width=0.8\textwidth]{K-system-rack-config-mod.png}
 \caption{Subset of system racks of the K computer and I/O accesses from compute nodes
-towards the LFS}
+towards the LFS.}
 \label{fig:SUBSET_SYSRACK_K}
 \end{figure}
 %
@@ -371,7 +371,7 @@ the I/O zoning scheme~\cite{sumimoto:LUG2011}.
 I/O zoning scheme was introduced in order to mitigate I/O interference on OSTs
 and I/O nodes among jobs by assigning I/O nodes and OSTs on the same $Z$-link
 with compute nodes used.
-In Fig.~\ref{fig:SUBSET_SYSRACK_K}, I/O accesses from compute nodes
+In Figure~\ref{fig:SUBSET_SYSRACK_K}, I/O accesses from compute nodes
 at the system rack are illustrated on the left side.
 I/O nodes on the same $Z$-links were configured to work with compute nodes
 that issued I/O requests, and those I/O nodes
@@ -408,7 +408,7 @@ as shown in Figure~\ref{fig:Log-collect-K}.
 \begin{figure}[tb]
 \centering
 \includegraphics[width=0.72\textwidth]{Log-collect-K-ext.png}
-\caption{Log collection from I/O nodes}
+\caption{Log collection from I/O nodes.}
 \label{fig:Log-collect-K}
 \end{figure}
 %/
@@ -527,7 +527,7 @@ and the JOB-DB to analyze I/O activities on I/O nodes and the LFS.
 \begin{figure}[tb]
 \centering
 \includegraphics[width=0.6\textwidth]{Log-anal-system.png}
-\caption{Functional overview of implemented analysis framework}
+\caption{Functional overview of implemented analysis framework.}
 \label{fig:LOG_ANAL_SYS}
 \end{figure}
 %
@@ -653,15 +653,15 @@ the order of striping accesses.
 \subcaption{With striping-awareness}
 \label{fig:WITH_STR_AWARE}
 \end{minipage}
-\caption{Aggregator layouts with and without striping awareness}
+\caption{Aggregator layouts with and without striping awareness.}
 \label{fig:AGG_STR_AWARE}
 \end{figure}
 %
 By placing aggregators in an MPI rank order
-as shown in Fig.~\ref{fig:WO_STR_AWARE},
+as shown in Figure~\ref{fig:WO_STR_AWARE},
 we may face contention in a path towards target OSTs.
 On the other hand, a striping-aware layout shown in
-Fig.~\ref{fig:WITH_STR_AWARE},
+Figure~\ref{fig:WITH_STR_AWARE},
 renumbering the order of aggregators in the red-colored numbers,
 eliminates data transfer congestion on every I/O path
 because I/O flows of every I/O path towards a target OST are
@@ -686,7 +686,7 @@ where we assume every process acts as an aggregator.
 \subcaption{Stepwise data aggregation}
 \label{fig:STEP_WISE_AGG}
 \end{minipage}
-\caption{I/O request throttling with stepwise data aggregation}
+\caption{I/O request throttling with stepwise data aggregation.}
 \label{fig:IO_THROT_DATA_AGG}
 \end{figure}
 %
@@ -707,7 +707,7 @@ It is also noted that EARTH also supports I/O request throttling
 even if we disable two-phase I/O in collective MPI-IO.
 
 Stepwise data aggregation shown in
-Fig.~\ref{fig:STEP_WISE_AGG}
+Figure~\ref{fig:STEP_WISE_AGG}
 is another optimization associated with the I/O throttling.
 Compared with simultaneous data aggregation by all the processes,
 we can eliminate congestion in data transfers among compute nodes
@@ -749,7 +749,7 @@ deployed among four compute nodes in a blocked layout.
 \label{fig:RR_LAYOUT}
 \end{minipage}
 \caption{Aggregator layouts with blocked and round-robin manners,
-utilizing I/O throttling and step-wise data aggregation in write operations}
+utilizing I/O throttling and stepwise data aggregation in write operations.}
 \label{fig:AGG_RR_LAYOUT}
 \end{figure}
 %
@@ -759,7 +759,7 @@ read, data aggregation, and write phases in two-phase I/O during collective writ
 operations, respectively.
 As shown in this figure, I/O throttling scheme relays tokens among aggregators.
 When we have a blocked aggregator layout as shown in
-Fig.~\ref{fig:BLK_LAYOUT},
+Figure~\ref{fig:BLK_LAYOUT},
 four processes in the two compute nodes ({\itshape CN\,\#0} and {\itshape CN\,\#1})
 work as aggregators, which are from 0 to 7 in MPI ranks.
 As a result, we may have contention within the same compute node
@@ -767,7 +767,7 @@ in performing each phase of two-phase I/O.
 It is also noted that such layout leads to high I/O workload
 in each node compared with other compute nodes without aggregators.
 Meanwhile, the round-robin aggregator layout in
-Fig.~\ref{fig:RR_LAYOUT}
+Figure~\ref{fig:RR_LAYOUT}
 can distribute I/O workload evenly
 among compute nodes, and this layout also prevents aggregators
 from I/O access contention within the same compute node
@@ -901,7 +901,7 @@ with standard deviations for the IOR and HPIO benchmarks.
 \end{minipage}
 \caption{
 Benchmark results of the original MPI-IO and EARTH with several optimization
-configurations by using (a) IOR and (b) HPIO}
+configurations by using (a) IOR and (b) HPIO.}
 \label{fig:IOR_HPIO_PERF}
 \end{figure}
 %
@@ -962,18 +962,18 @@ at the IOR benchmark run.
 \end{minipage}
 %
 \caption{Mean stats values obtained from OSSes using our analysis framework
-during the IOR benchmark run, where numbers represent very small values}
+during the IOR benchmark run, where numbers represent very small values.}
 \label{fig:IOR_OST_IO_STATS}
 \end{figure}
 %
-As shown in Fig.~\ref{fig:IOR_req_qdepth}, the two original cases
+As shown in Figure~\ref{fig:IOR_req_qdepth}, the two original cases
 with or without two-phase I/O, {\tt T:original} and {\tt N:original},
 had the largest number of requests in a request queue
 in each I/O operations with or without two-phase I/O.
-Fig.~\ref{fig:IOR_req_waittime} shows that those cases also took
+Figure~\ref{fig:IOR_req_waittime} shows that those cases also took
 the longest time to proceed requests
 in each I/O operations with or without two-phase I/O.
-Additionally, Fig.~\ref{fig:IOR_req_active} shows
+Additionally, Figure~\ref{fig:IOR_req_active} shows
 the highest number of I/O threads in the original case
 with two-phase I/O.
 Note that the maximum number of threads at each OSS of the LFS was 32
@@ -984,10 +984,10 @@ I/O request processing at OSSes.
 
 While the EARTH use case with good I/O performance ({\tt T:agg=1,rr=1,req=4})
 showed small number of requests in the queue,
-as shown in Fig.~\ref{fig:IOR_req_qdepth}.
-Fig.~\ref{fig:IOR_req_waittime} also shows
+as shown in Figure~\ref{fig:IOR_req_qdepth}.
+Figure~\ref{fig:IOR_req_waittime} also shows
 the fact that this case took quite short times to process I/O requests.
-Additionally, Fig.~\ref{fig:IOR_req_active} shows
+Additionally, Figure~\ref{fig:IOR_req_active} shows
 many I/O threads were active in this case.
 
 Figure~\ref{fig:HPIO_OST_IO_STATS} shows the same statistics obtained
@@ -1019,7 +1019,7 @@ in the HPIO benchmark run.
 \end{minipage}
 %
 \caption{Mean stats values obtained from OSSes using our analysis framework
-during the HPIO benchmark run, where numbers represent very small values}
+during the HPIO benchmark run, where numbers represent very small values.}
 \label{fig:HPIO_OST_IO_STATS}
 \end{figure}
 %
@@ -1050,12 +1050,12 @@ Figure~\ref{fig:IOR_ION_TOFU_BWU_WAIT_TIME} shows mean values of
 \end{minipage}
 \caption{
 Mean values for (a) $R_{BW}$ and (b) $T_{wait}^{max}$ on the Tofu interconnects
-among I/O nodes used during the IOR benchmark run}
+among I/O nodes used during the IOR benchmark run.}
 \label{fig:IOR_ION_TOFU_BWU_WAIT_TIME}
 \end{figure}
 %
 Concerning bandwidth utilization shown in
-Fig.~\ref{fig:IOR_ION_TOFU_BW_UTIL},
+Figure~\ref{fig:IOR_ION_TOFU_BW_UTIL},
 the original MPI-IO use case showed the lowest utilization,
 while the full set of EARTH optimizations such as {\tt T:agg=1,rr=1,req=4}
 led to higher levels of bandwidth utilization relative to other cases.
@@ -1066,17 +1066,17 @@ By considering effectiveness in data transfers among I/O nodes via Tofu intercon
 a higher utilization was preferable.
 Within this context, the above optimized case was suitable for I/O optimization.
 
-Fig.~\ref{fig:IOR_ION_TOFU_WAIT_TIME}
+Figure~\ref{fig:IOR_ION_TOFU_WAIT_TIME}
 shows that the enhanced implementation
 without aggregator layout optimization indicated by {\tt T:agg=0,rr=0,req=4}
 took the longest times.
 It is also noted that this case also performed the lowest bandwidth utilization
 in write operations,
-as shown in Fig.~\ref{fig:IOR_ION_TOFU_BW_UTIL}.
+as shown in Figure~\ref{fig:IOR_ION_TOFU_BW_UTIL}.
 It is notable that the lack of aggregator layout optimization in the EARTH case
 led to a negative impact in data transfers on Tofu interconnects among I/O nodes.
 
-In a similar way, Fig.~\ref{fig:HPIO_ION_TOFU_BWU_WAIT_TIME} shows
+In a similar way, Figure~\ref{fig:HPIO_ION_TOFU_BWU_WAIT_TIME} shows
 bandwidth utilization ratios and waiting times in data transfers
 on Tofu links of I/O nodes used at the HPIO benchmark run.
 %
@@ -1097,15 +1097,15 @@ on Tofu links of I/O nodes used at the HPIO benchmark run.
  \label{fig:HPIO_ION_TOFU_WAIT_TIME}
 \end{minipage}
 \caption{Mean values for (a) $R_{BW}$ and (b) $T_{wait}^{max}$ on the Tofu interconnects
-among I/O nodes used during the HPIO benchmark run}
+among I/O nodes used during the HPIO benchmark run.}
 \label{fig:HPIO_ION_TOFU_BWU_WAIT_TIME}
 \end{figure}
 %
 The EARTH use case with the best configuration ({\tt T:agg=1,rr=1,req=8}) also
 outperformed other cases in
-Fig.~\ref{fig:HPIO_ION_TOFU_BW_UTIL}.
+Figure~\ref{fig:HPIO_ION_TOFU_BW_UTIL}.
 This case also minimized waiting times in both read and write operations
-among the EARTH use cases in Fig.~\ref{fig:HPIO_ION_TOFU_WAIT_TIME}.
+among the EARTH use cases in Figure~\ref{fig:HPIO_ION_TOFU_WAIT_TIME}.
 
 \subsection{Load balancing in I/O throughput at OSTs}
 
@@ -1158,7 +1158,7 @@ among the 192 OSTs used during the IOR benchmark runs.
 \end{minipage}
 %
 \caption{Write throughput heat-maps ranging from 0 to 160\,MiB/s
-about the 192 OSTs used during the IOR benchmark run}
+about the 192 OSTs used during the IOR benchmark run.}
 \label{fig:IOR_OST_BW_HMAP_WR}
 \end{figure}
 %
@@ -1166,28 +1166,28 @@ Horizontal and vertical axes ranging from 0 to 15 and from 0 to 11,
 indicate subjected relative 2D positions of OSTs used from the logical 3D layout
 of the K computer.
 
-In the original MPI-IO use case in Fig.~\ref{fig:IOR_OST_WR_ORIG},
+In the original MPI-IO use case in Figure~\ref{fig:IOR_OST_WR_ORIG},
 we can see performance gaps among the left and right sides separated by
 the dotted line.
-Fig.~\ref{fig:IOR_OST_WR_AGG0_RR0_REQ0}
+Figure~\ref{fig:IOR_OST_WR_AGG0_RR0_REQ0}
 also shows performance gaps among OSTs used
 because of imbalanced aggregator layout although the EARTH was used.
 Both cases were not suitable configurations because total I/O performance
 was limited by the slowest OSTs in parallel I/O.
-Meanwhile, the most optimized case in Fig.~\ref{fig:IOR_OST_WR_AGG1_RR1_REQ4}
+Meanwhile, the most optimized case in Figure~\ref{fig:IOR_OST_WR_AGG1_RR1_REQ4}
 shows a well-balanced situation in write throughput among OSTs used.
 Within the context of parallel I/O characteristics,
 this case was suitable to achieve I/O performance for the benchmark run.
 
 On the other hand,
-Figs.~\ref{fig:IOR_OST_WR_NTP_ORIG} and
-\ref{fig:IOR_OST_WR_NTP_AGG0_RR0_REQ4} show poor I/O throughput
+Figure~\ref{fig:IOR_OST_WR_NTP_ORIG} and
+Figure~\ref{fig:IOR_OST_WR_NTP_AGG0_RR0_REQ4} show poor I/O throughput
 in collective write operations in the original and the EARTH use cases
 without two-phase I/O, respectively.
 These poor performance situations were due to contention
 in I/O task assignment to I/O threads by huge number of concurrent I/O accesses
 from all 12,288 processes as we observed in
-Figs.~\ref{fig:IOR_req_qdepth} and \ref{fig:IOR_req_waittime}.
+Figure~\ref{fig:IOR_req_qdepth} and Figure~\ref{fig:IOR_req_waittime}.
 
 Figure~\ref{fig:IOR_OST_BW_HMAP_RD} shows read throughput heat-maps
 ranging from 0 to 160\,MiB/s among the 192 OSTs used at the IOR benchmark runs.
@@ -1236,21 +1236,21 @@ ranging from 0 to 160\,MiB/s among the 192 OSTs used at the IOR benchmark runs.
 \end{minipage}
 %
 \caption{Read throughput heat-maps ranging from 0 to 160\,MiB/s
-about the 192 OSTs used during the IOR benchmark run}
+about the 192 OSTs used during the IOR benchmark run.}
 \label{fig:IOR_OST_BW_HMAP_RD}
 \end{figure}
 %
 Imbalanced bandwidth situations in the original MPI-IO use case
 and the EARTH use case without any optimizations were observed
-in Figs.~\ref{fig:IOR_OST_RD_ORIG} and \ref{fig:IOR_OST_RD_AGG0_RR0_REQ0}, respectively.
+in Figure~\ref{fig:IOR_OST_RD_ORIG} and Figure~\ref{fig:IOR_OST_RD_AGG0_RR0_REQ0}, respectively.
 Meanwhile, well-balanced situations were achieved in the EARTH use case
 with an optimal optimization configuration,
 which led to high performance collective I/O,
-as shown in Fig.~\ref{fig:IOR_OST_RD_AGG1_RR1_REQ4}.
+as shown in Figure~\ref{fig:IOR_OST_RD_AGG1_RR1_REQ4}.
 
 Write and read throughput heat-maps ranging from 0 to 160\,MiB/s
 at the HPIO run are also shown in
-Figs.~\ref{fig:HPIO_OST_BW_HMAP_WR} and \ref{fig:HPIO_OST_BW_HMAP_RD}, respectively.
+Figure~\ref{fig:HPIO_OST_BW_HMAP_WR} and Figure~\ref{fig:HPIO_OST_BW_HMAP_RD}, respectively.
 %
 \begin{figure}[tb]
 \begin{minipage}[t]{0.06\textwidth}
@@ -1279,7 +1279,7 @@ Figs.~\ref{fig:HPIO_OST_BW_HMAP_WR} and \ref{fig:HPIO_OST_BW_HMAP_RD}, respectiv
 \end{minipage}
 %
 \caption{Write throughput heat-maps ranging from 0 to 160\,MiB/s about
-the 192 OSTs used at the HPIO benchmark run}
+the 192 OSTs used at the HPIO benchmark run.}
 \label{fig:HPIO_OST_BW_HMAP_WR}
 \end{figure}
 %
@@ -1310,21 +1310,21 @@ the 192 OSTs used at the HPIO benchmark run}
 \end{minipage}
 %
 \caption{Read throughput heat-maps ranging from 0 to 160\,MiB/s about
-the 192 OSTs used at the HPIO benchmark run}
+the 192 OSTs used at the HPIO benchmark run.}
 \label{fig:HPIO_OST_BW_HMAP_RD}
 \end{figure}
 %
-In Fig.~\ref{fig:HPIO_OST_BW_HMAP_RD}, the EARTH use case with insufficient configuration
+In Figure~\ref{fig:HPIO_OST_BW_HMAP_RD}, the EARTH use case with insufficient configuration
 ({\tt T:agg=0,rr=0,req=8}) showed lower performance compared with the original MPI-IO use case.
 Meanwhile, a full set of the three optimizations in the EARTH use case
 ({\tt T:agg=1,rr=1,req=8}) achieved the highest I/O throughput at every OST used. 
-Read throughput heat-maps in Fig.~\ref{fig:HPIO_OST_BW_HMAP_RD} show
+Read throughput heat-maps in Figure~\ref{fig:HPIO_OST_BW_HMAP_RD} show
 the highest I/O throughput in the insufficient optimization configuration
 ({\tt T:agg=0,rr=0,req=8}), followed by the original MPI-IO use case
 and the full optimization configuration case.
 However, the insufficient configuration case performed the longest waiting time
 in the Tofu interconnects among the I/O nodes used,
-as shown in Fig.~\ref{fig:HPIO_ION_TOFU_WAIT_TIME},
+as shown in Figure~\ref{fig:HPIO_ION_TOFU_WAIT_TIME},
 and thus high I/O bandwidth could not be achieved in this configuration.
 
 \subsection{Overall evaluation}
@@ -1357,7 +1357,7 @@ Finally we obtained a stats score as a mean value of the ranks.
 Table~\ref{tbl:IOR_OVERALL_EVAL} summarizes the scores of the IOR benchmark run.
 %
 \begin{table}[tb]
-\caption{Scores of the IOR benchmark run, where lesser is better in each score number}
+\caption{Scores of the IOR benchmark run, where lesser is better in each score number.}
 \centering
 \begin{tabular}{lccccccc}
 \hline
@@ -1389,7 +1389,7 @@ Meanwhile, the scores of the HPIO benchmark run are summarized in
 Table~\ref{tbl:HPIO_OVERALL_EVAL}.
 %
 \begin{table}[tb]
-\caption{Scores of the HPIO benchmark run, where lesser is better in each score number}
+\caption{Scores of the HPIO benchmark run, where lesser is better in each score number.}
 \centering
 \begin{tabular}{lccccccc}
 \hline
@@ -1499,7 +1499,8 @@ another challenge.
 This research used computational resources of the K computer
 provided by the RIKEN Center for Computational Science.
 
-\textit{TODO: We thank the reviewers XX and YY for the feedback.}
+\textit{We thank the reviewers Lingfang Zeng, Suren Byna, Anthony Kougkas,
+and George Markomanolis for their constructive feedback.}
 
   % The bibliography
 \addcontentsline{toc}{section}{Bibliography}

@@ -64,7 +64,7 @@
 
 \begin{document}
 
-\JHPSissue{0}   % keep 0 until the issue is assigned
+\JHPSissue{2}   % keep 0 until the issue is assigned
 \JHPSkeywords{Holistic log data analysis, K computer, FEFS, Lustre, Tofu, MPI-IO}
 
   % Author macro takes Name, Institution, Optional Link to the person, Optional Email
@@ -176,7 +176,7 @@ in I/O workload among I/O nodes used in our enhancements in collective MPI-IO
 implementations named ``EARTH on K''~\cite{tsujita:WS_EuroMPI2014,tsujita:hpcasia18}.
 We have already conducted empirical benchmark evaluations
 in performance improvements for our enhancement work in the K computer
-through researches in \cite{tsujita:WS_EuroMPI2014,tsujita:hpcasia18}.
+through studies in \cite{tsujita:WS_EuroMPI2014,tsujita:hpcasia18}.
 Since only the result obtained from the benchmark evaluations is I/O performance,
 we had difficulties in tuning the implementation.
 Once we have introduced the framework for the evaluations,
@@ -249,7 +249,7 @@ by analyzing server-side log data of parallel file systems
 to draw new insights about I/O characteristics.
 % even though sufficient logging of each server-side component did not provide
 % causal relationships between client and server-side activities.
-However, their researches did not focus on behavior of interconnects.
+However, abovementioned studies did not focus on behavior of interconnects.
 Our proposed framework supports interconnect monitoring
 in performance bottleneck investigation to tune I/O optimization
 with server-side log data of a local file system
@@ -271,7 +271,7 @@ Chunduri et al. succeeded in execution time predictions
 of applications by analyzing traffic congestion information
 obtained from performance counters of Aries interconnects in the Theta
 at the Argonne Leadership Computing Facility~\cite{chunduri:pmbs19}.
-They introduced machine learning approach in their prediction.
+They introduced a machine learning approach in their prediction.
 However, the above studies were not sufficient to characterize I/O activities
 on parallel file systems in HPC systems.
 Within this context, Yang el al. pointed out that storage interconnect is
